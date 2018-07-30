@@ -5,11 +5,20 @@
 - macOS Sierra
 - Go 1.10
 
-## ビルド手順
+## インストール手順
+
+### macOS + Homebrew でのインストール
+
+```bash
+brew tap but80/tap
+brew install but80/tap/talklistener
+```
+
+### Go 1.10 でのインストール（開発者向け）
 
 ```bash
 go run mage.go build
-./talklistener
+# ./talklistener に生成されます
 ```
 
 ## 使用方法
