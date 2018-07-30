@@ -15,6 +15,5 @@ fi
 
 say -v Kyoko -o say 'これはテストです' || exit $?
 sox say.aiff -r 16000 say.16k.wav || exit $?
-echo 'これはてすとです' > say.txt
-cd ..
-./talklistener examples/say.16k.wav examples/say.txt examples/say.vsqx
+echo 'これわてすとです' > say.txt
+../talklistener say.16k.wav say.txt say.vsqx

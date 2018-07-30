@@ -4,18 +4,21 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
+	"github.com/but80/talklistener/internal/assets"
 	"github.com/but80/talklistener/internal/julius"
 )
 
 const (
 	framePeriod = 0.01
-	offsetAlign = 0.0125                                                              // offset for result in ms: 25ms / 2
-	hmmDefs     = "./cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm" // monophone model
-	// hmmDefs = "./cmodules/segmentation-kit/models/hmmdefs_ptm_gid.binhmm" // triphone model
+	offsetAlign = 0.0125                                                             // offset for result in ms: 25ms / 2
+	hmmDefs     = "/cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm" // monophone model
+	// hmmDefs = "/cmodules/segmentation-kit/models/hmmdefs_ptm_gid.binhmm" // triphone model
 )
 
 var kanaToPhoneticTable = [][2]string{
@@ -399,6 +402,18 @@ type Segment struct {
 	Unit      string
 }
 
+func saveAssetAsFile(assetname, filename string) error {
+	file, err := assets.Assets.Open(assetname)
+	if err != nil {
+		return err
+	}
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, data, 0644)
+}
+
 func Segmentate(wavfile, wordsfile, tmpprefix string) ([]Segment, error) {
 	words, err := wordsToDict(wordsfile, tmpprefix+".dict")
 	if err != nil {
@@ -406,9 +421,14 @@ func Segmentate(wavfile, wordsfile, tmpprefix string) ([]Segment, error) {
 	}
 	generateDFA(len(words), tmpprefix+".dfa")
 
+	hmmTmpName := tmpprefix + filepath.Base(hmmDefs)
+	if err := saveAssetAsFile(hmmDefs, hmmTmpName); err != nil {
+		return nil, err
+	}
+
 	argv := []string{
 		"julius",
-		"-h", hmmDefs, // HMM definition
+		"-h", hmmTmpName, // HMM definition
 		"-dfa", tmpprefix + ".dfa", // DFA grammar
 		"-v", tmpprefix + ".dict", // dictionary
 		"-palign", // optionally output phoneme alignments

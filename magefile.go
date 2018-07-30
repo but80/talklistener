@@ -10,8 +10,10 @@ import (
 	"strings"
 
 	// "github.com/jessevdk/go-assets"
+	"github.com/jessevdk/go-assets"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
+	"github.com/magefile/mage/target"
 	"golang.org/x/tools/imports"
 )
 
@@ -95,6 +97,33 @@ func Cmodules() error {
 		return err
 	}
 	if err := buildWorld(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Generate assets
+func Assets() error {
+	dst := "internal/assets/assets.go"
+	src := []string{
+		"cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm",
+	}
+	if ok, _ := target.Path(dst, src...); ok {
+		return nil
+	}
+
+	gen := assets.Generator{
+		PackageName: "assets",
+	}
+	for _, s := range src {
+		gen.Add(s)
+	}
+	file, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if err := gen.Write(file); err != nil {
 		return err
 	}
 	return nil
