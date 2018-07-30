@@ -1,0 +1,12 @@
+[submodule "cmodules/segmentation-kit"]
+	path = cmodules/segmentation-kit
+	url = https://github.com/julius-speech/segmentation-kit.git
+	ignore = dirty
+[submodule "cmodules/world"]
+	path = cmodules/world
+	url = https://github.com/mmorise/World.git
+	ignore = dirty
+[submodule "cmodules/julius"]
+	path = cmodules/julius
+	url = https://github.com/julius-speech/julius.git
+	ignore = dirty

@@ -1,0 +1,7 @@
+[[constraint]]
+  name = "github.com/theckman/goconstraint"
+  version = "1.10.0"
+
+[prune]
+  go-tests = true
+  unused-packages = true
