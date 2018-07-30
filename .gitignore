@@ -3,6 +3,9 @@
 /test/
 /talklistener
 /vendor/**/*.wav
+/examples/**/*.wav
+/examples/**/*.txt
+/examples/**/*.vsqx
 
 
 # Created by https://www.gitignore.io/api/osx,windows,code,intellij,go,python
