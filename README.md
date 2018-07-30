@@ -30,11 +30,11 @@ go run mage.go build
 USAGE: talklistener <input wav> <input text> [<output vsqx>]
 ```
 
-- 入力音源 `<input wav>` は、以下のスペックのwavファイルである必要があります。
+- 入力音源ファイル `<input wav>` は、以下のスペックのwavファイルである必要があります。
   - サンプリング周波数 16,000 Hz
   - 量子化ビット数 16 bit
   - モノラル
-- 入力テキスト `<input text>` には、認識させたい読みをひらがなで記述します。
+- 入力テキストファイル `<input text>` には、認識させたい読みをひらがなで記述します。
   - 文字エンコーディングは Unicode です。
   - 間隔が開く箇所には ` sp ` と記述します（左右に半角スペースが必要です）
 - `<output vsqx>` を省略すると標準出力に結果を出力します。
