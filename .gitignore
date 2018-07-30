@@ -3,6 +3,7 @@
 /test/
 /talklistener
 /vendor/**/*.wav
+/examples/**/*.aiff
 /examples/**/*.wav
 /examples/**/*.txt
 /examples/**/*.vsqx
