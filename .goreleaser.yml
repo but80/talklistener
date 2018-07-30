@@ -1,0 +1,27 @@
+project_name: talklistener
+release:
+  github:
+    owner: but80
+    name: talklistener
+brew:
+  github:
+    owner: but80
+    name: homebrew-tap
+builds:
+  - goos:
+      - darwin
+      # - windows
+    goarch:
+      - amd64
+    main: .
+    ldflags: -s -w -X main.version={{.Version}}
+    binary: talklistener
+archive:
+  format: tar.gz
+  format_overrides:
+    - goos: windows
+      format: zip
+  name_template: '{{ .Binary }}_{{.Version}}_{{ .Os }}_{{ .Arch }}'
+  files:
+    - LICENSE*
+    - README*
