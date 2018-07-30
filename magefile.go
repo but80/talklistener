@@ -129,10 +129,19 @@ func Assets() error {
 	return nil
 }
 
-// Build project
+// Build binary
 func Build() error {
 	mg.SerialDeps(Cmodules)
 	if err := sh.RunV("go", "build", "."); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Install binary
+func Install() error {
+	mg.SerialDeps(Cmodules)
+	if err := sh.RunV("go", "install", "."); err != nil {
 		return err
 	}
 	return nil

@@ -20,8 +20,12 @@ brew install but80/tap/talklistener
 ### Go 1.10 でのインストール（開発者向け）
 
 ```bash
+go run mage.go install
+
+# または
+
 go run mage.go build
-# ./talklistener に生成されます
+mv ./talklistener /usr/local/bin/
 ```
 
 ## 使用方法
