@@ -1,7 +1,5 @@
 # TalkListener
 
-**WORK IN PROGRESS**
-
 ## 必須環境
 
 - macOS Sierra
@@ -28,10 +26,12 @@ USAGE: talklistener <input wav> <input text> [<output vsqx>]
   - 文字エンコーディングは Unicode です。
   - 間隔が開く箇所には ` sp ` と記述します（左右に半角スペースが必要です）
 - `<output vsqx>` を省略すると標準出力に結果を出力します。
+- 具体的な使用例は [examples/](./examples) を参考にしてください。
 
-## Tips
+## Tips・注意事項
 
-- 入力ファイルのフォーマットが合わない場合は、[SoX](http://brewformulas.org/Sox) を利用するとCLIで簡単にコンバートできます。例: `sox input.aiff -r 16000 output.wav`
+- 入力ファイルのフォーマットが合わない場合は、[SoX](http://brewformulas.org/Sox) を利用するとCLIで簡単にコンバートできます。<br>例: `sox input.aiff -r 16000 output.wav`
+- 音声が長すぎるとエラーになる場合があります。その場合は、細切れにして別々に処理してください。
 
 ## ライセンス
 
