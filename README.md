@@ -44,6 +44,7 @@ USAGE: talklistener <input wav> <input text> [<output vsqx>]
 
 - 入力ファイルのフォーマットが合わない場合は、[SoX](http://brewformulas.org/Sox) を利用するとCLIで簡単にコンバートできます。<br>例: `sox input.aiff -r 16000 output.wav`
 - 音声が長すぎるとエラーになる場合があります。その場合は、細切れにして別々に処理してください。
+- 出力されるVSQXに設定されたシンガーは、現バージョンでは「結月ゆかり 穏」固定です。Vocaloidエディタで読み込み後、目的のシンガーに変更してください。
 
 ## ライセンス
 
