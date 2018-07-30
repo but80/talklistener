@@ -1,9 +1,12 @@
 # TalkListener
 
+話し声を録音したwavファイルと、その読みを記述したテキストの組み合わせから、Vocaloid3シーケンスを生成するCLIツールです。
+
+- [デモ](https://twitter.com/bucchigiri/status/1023193037193719808)
+
 ## 必須環境
 
 - macOS Sierra
-- Go 1.10
 
 ## インストール手順
 
