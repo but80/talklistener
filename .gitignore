@@ -4,6 +4,7 @@
 /talklistener
 /vendor/**/*.wav
 /examples/**/*.aiff
+/examples/**/*.flac
 /examples/**/*.wav
 /examples/**/*.txt
 /examples/**/*.vsqx
