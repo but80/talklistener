@@ -14,6 +14,7 @@ static void _register_callback_result(Recog *recog, void *data) {
 import "C"
 import (
 	"fmt"
+	"strings"
 	"unsafe"
 
 	"github.com/but80/talklistener/internal/globalopt"
@@ -26,7 +27,8 @@ type Segment struct {
 }
 
 type Result struct {
-	Segments []Segment
+	Dictation [][]string
+	Segments  []Segment
 }
 
 func Run(argv []string, wavfile string) (*Result, error) {
@@ -86,6 +88,19 @@ func onResult(recog *C.Recog, data unsafe.Pointer) {
 	}
 }
 
+func centerName(s string) string {
+	if i := strings.Index(s, "-"); 0 <= i {
+		s = s[i+1:]
+	}
+	if i := strings.LastIndex(s, "+"); 0 <= i {
+		s = s[:i]
+	}
+	if i := strings.Index(s, "_"); 0 <= i {
+		s = s[:i]
+	}
+	return s
+}
+
 func outputResult(proc *C.RecogProcess, result *Result) {
 	if proc.live == 0 {
 		return
@@ -94,9 +109,27 @@ func outputResult(proc *C.RecogProcess, result *Result) {
 		fmt.Printf("no results obtained: %d\n", proc.result.status)
 		return
 	}
+	winfo := proc.lm.winfo
 	sentnum := int(proc.result.sentnum)
 	for i := 0; i < sentnum; i++ {
 		sent := readSentence(proc.result.sent, i)
+
+		if unsafe.Pointer(&sent.word[0]) != nil {
+			seqnum := int(sent.word_num)
+			dictation := []string{}
+			for i := 0; i < seqnum; i++ {
+				w := int(sent.word[i])
+				wl := int(readCUCharArray(winfo.wlen, w))
+				for j := 0; j < wl; j++ {
+					p := readHMMLogicalPtr(winfo.wseq, w)
+					ws := readHMMLogical(p, j)
+					unit := C.GoString(ws.name)
+					dictation = append(dictation, centerName(unit))
+				}
+			}
+			result.Dictation = append(result.Dictation, dictation)
+		}
+
 		for align := sent.align; align != nil; align = align.next {
 			for i := 0; i < int(align.num); i++ {
 				// align.avgscore[i]
@@ -137,6 +170,12 @@ func readHMMLogical(p **C.HMM_Logical, index int) *C.HMM_Logical {
 	return *(**C.HMM_Logical)(ptr)
 }
 
+func readHMMLogicalPtr(p ***C.HMM_Logical, index int) **C.HMM_Logical {
+	size := unsafe.Sizeof(*p)
+	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
+	return *(***C.HMM_Logical)(ptr)
+}
+
 func readSentence(p *C.Sentence, index int) *C.Sentence {
 	size := unsafe.Sizeof(*p)
 	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
@@ -147,4 +186,10 @@ func readCIntArray(p *C.int, index int) C.int {
 	size := unsafe.Sizeof(*p)
 	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
 	return *(*C.int)(ptr)
+}
+
+func readCUCharArray(p *C.uchar, index int) C.uchar {
+	size := unsafe.Sizeof(*p)
+	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
+	return *(*C.uchar)(ptr)
 }
