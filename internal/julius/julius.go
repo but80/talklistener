@@ -15,6 +15,8 @@ import "C"
 import (
 	"fmt"
 	"unsafe"
+
+	"github.com/but80/talklistener/internal/globalopt"
 )
 
 type Segment struct {
@@ -28,12 +30,10 @@ type Result struct {
 }
 
 func Run(argv []string, wavfile string) (*Result, error) {
-	silent := true
-	verbose := false
-	if verbose {
+	if globalopt.Verbose {
 		C.j_enable_debug_message()
 	}
-	if silent {
+	if !globalopt.Verbose {
 		C.jlog_set_output(nil)
 	}
 

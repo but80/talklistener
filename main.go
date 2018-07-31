@@ -2,7 +2,9 @@ package main
 
 import (
 	"os"
+	"strings"
 
+	"github.com/but80/talklistener/internal/globalopt"
 	_ "github.com/theckman/goconstraint/go1.10/gte"
 	"github.com/urfave/cli"
 )
@@ -23,6 +25,7 @@ func main() {
 	app.Name = "talklistener"
 	app.Version = version
 	app.Usage = "話し声を録音したwavファイルと、その読みを記述したテキストの組み合わせから、Vocaloid3シーケンスを生成します"
+	app.Description = strings.TrimSpace(description)
 	app.Authors = []cli.Author{
 		{
 			Name:  "but80",
@@ -31,7 +34,13 @@ func main() {
 	}
 	app.HelpName = "talklistener"
 	app.UsageText = "talklistener <音声ファイル.wav> <テキストファイル.txt> [<出力ファイル.vsqx>]"
-	app.Description = description[4:]
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "verbose, v",
+			Usage: "詳細を表示します",
+		},
+	}
+	app.HideVersion = true
 
 	app.Action = func(ctx *cli.Context) error {
 		if ctx.NArg() < 2 {
@@ -43,6 +52,7 @@ func main() {
 		if 3 <= ctx.NArg() {
 			outfile = ctx.Args()[2]
 		}
+		globalopt.Verbose = ctx.Bool("verbose")
 		if err := generate(wavfile, txtfile, outfile); err != nil {
 			return cli.NewExitError(err, 1)
 		}

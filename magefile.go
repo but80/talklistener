@@ -152,6 +152,7 @@ func Run() error {
 	mg.SerialDeps(Cmodules)
 	args := []string{
 		"run", "main.go", "generator.go", "f0.go", "fir.go",
+		// "-v",
 		"input/test.wav", "input/test.txt", "output/test.vsqx",
 	}
 	if err := sh.RunV("go", args...); err != nil {
