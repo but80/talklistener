@@ -12,12 +12,15 @@ import (
 var version = "unknown"
 
 const description = `
+   - <音声ファイル> は .wav .aiff .mp3 等のフォーマットに対応しています。
+     詳細は afconvert のヘルプを afconvert -hf にてお読みください。
    - イントネーションの抽出に「音声分析変換合成システム WORLD」
-     https://github.com/mmorise/World を使用しています
+     https://github.com/mmorise/World を使用しています。
    - 発音タイミングの抽出に「大語彙連続音声認識エンジン Julius」
      https://github.com/julius-speech/julius
-     および segmentation-kit https://github.com/julius-speech/segmentation-kit
-     に含まれる音響モデルを使用しています
+     および、以下の関連データを使用しています。
+     - 音素セグメンテーションキット https://github.com/julius-speech/segmentation-kit
+     - ディクテーションキット https://github.com/julius-speech/dictation-kit
 `
 
 func main() {
@@ -33,7 +36,7 @@ func main() {
 		},
 	}
 	app.HelpName = "talklistener"
-	app.UsageText = "talklistener [オプション...] <音声ファイル.wav> <テキストファイル.txt> [<出力ファイル.vsqx>]"
+	app.UsageText = "talklistener [オプション...] <音声ファイル> <テキストファイル> [<出力ファイル.vsqx>]"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "verbose, v",

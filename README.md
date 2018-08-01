@@ -32,7 +32,7 @@ mv ./talklistener /usr/local/bin/
 
 ```
 USAGE:
-   talklistener [オプション...] <音声ファイル.wav> <テキストファイル.txt> [<出力ファイル.vsqx>]
+   talklistener [オプション...] <音声ファイル> <テキストファイル> [<出力ファイル.vsqx>]
 
 GLOBAL OPTIONS:
    --verbose, -v  詳細を表示します
@@ -40,8 +40,8 @@ GLOBAL OPTIONS:
    --help, -h     show help
 ```
 
-- `<音声ファイル.wav>` は、macOS 付属の `afconvert` が対応しているフォーマットである必要があります。
-- `<テキストファイル.txt>` には、認識させたい読みをひらがなで記述します。
+- `<音声ファイル>` は `.wav` `.aiff` `.mp3` 等のフォーマットに対応しています。詳細は afconvert（macOS標準付属）のヘルプを `afconvert -hf` にてお読みください。
+- `<テキストファイル>` には、認識させたい読みをひらがなで記述します。
   - 文字エンコーディングは Unicode です。
   - 間隔が開く箇所には ` sp ` と記述します（左右に半角スペースが必要です）
 - `<出力ファイル.vsqx>` を省略すると標準出力に結果を出力します。
