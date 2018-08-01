@@ -1,10 +1,8 @@
 package julius
 
 import (
-	"fmt"
 	"os/user"
 	"path/filepath"
-	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -56,16 +54,5 @@ func Dictate(wavfile, filename string) (*Result, error) {
 		"-palign",
 		"-input", "file",
 	}
-	return Run(argv, wavfile)
-}
-
-func demo() {
-	result, err := Dictate("../../input/zassou1.wav", "ssr-dnn")
-	if err != nil {
-		panic(err)
-	}
-	for _, dic := range result.Dictation {
-		fmt.Printf("%s\n", strings.Join(dic, " "))
-	}
-	fmt.Printf("%#v\n", result.Segments)
+	return run(argv, wavfile)
 }

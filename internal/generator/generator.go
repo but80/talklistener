@@ -280,11 +280,15 @@ func Generate(wavfile, wordsfile, outfile string) error {
 	}()
 
 	wg.Add(1)
-	segs := []julius.Segment{}
+	var result *julius.Result
 	go func() {
 		defer wg.Done()
 		var err error
-		segs, err = julius.Segmentate(convertedWavFile, wordsfile, tmpprefix)
+		if wordsfile == "" {
+			result, err = julius.Dictate(convertedWavFile, "ssr-dnn")
+		} else {
+			result, err = julius.Segmentate(convertedWavFile, wordsfile, tmpprefix)
+		}
 		if err != nil {
 			errch <- err
 			return
@@ -303,7 +307,7 @@ func Generate(wavfile, wordsfile, outfile string) error {
 	gen.reset()
 
 	segsData := ""
-	for _, seg := range segs {
+	for _, seg := range result.Segments {
 		segsData += fmt.Sprintf("%.7f %.7f %s\n", seg.BeginTime, seg.EndTime, seg.Unit)
 
 		unit := seg.Unit

@@ -38,7 +38,7 @@ type Result struct {
 	Segments  []Segment
 }
 
-func Run(argv []string, wavfile string) (*Result, error) {
+func run(argv []string, wavfile string) (*Result, error) {
 	if globalopt.Verbose {
 		C.j_enable_debug_message()
 	}

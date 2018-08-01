@@ -14,7 +14,7 @@ var version = "unknown"
 
 const description = `
    - <音声ファイル> は .wav .aiff .mp3 等のフォーマットに対応しています。
-     詳細は afconvert のヘルプを afconvert -hf にてお読みください。
+	 詳細は afconvert のヘルプを afconvert -hf にてお読みください。
    - イントネーションの抽出に「音声分析変換合成システム WORLD」
      https://github.com/mmorise/World を使用しています。
    - 発音タイミングの抽出に「大語彙連続音声認識エンジン Julius」
@@ -37,7 +37,7 @@ func main() {
 		},
 	}
 	app.HelpName = "talklistener"
-	app.UsageText = "talklistener [オプション...] <音声ファイル> <テキストファイル> [<出力ファイル.vsqx>]"
+	app.UsageText = "talklistener [オプション...] <音声ファイル> [ <テキストファイル> [ <出力ファイル.vsqx> ] ]"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "verbose, v",
@@ -55,15 +55,13 @@ func main() {
 			cli.ShowVersion(ctx)
 			return nil
 		}
-		if ctx.NArg() < 2 {
+		if ctx.NArg() < 1 {
 			cli.ShowAppHelpAndExit(ctx, 1)
 		}
-		wavfile := ctx.Args()[0]
-		txtfile := ctx.Args()[1]
-		outfile := ""
-		if 3 <= ctx.NArg() {
-			outfile = ctx.Args()[2]
-		}
+		args := append(ctx.Args(), "", "")
+		wavfile := args[0]
+		txtfile := args[1]
+		outfile := args[2]
 		globalopt.Verbose = ctx.Bool("verbose")
 		if err := generator.Generate(wavfile, txtfile, outfile); err != nil {
 			return cli.NewExitError(err, 1)

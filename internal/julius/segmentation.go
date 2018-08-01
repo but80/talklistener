@@ -405,7 +405,7 @@ func saveAssetAsFile(assetname, filename string) error {
 	return ioutil.WriteFile(filename, data, 0644)
 }
 
-func Segmentate(wavfile, wordsfile, tmpprefix string) ([]Segment, error) {
+func Segmentate(wavfile, wordsfile, tmpprefix string) (*Result, error) {
 	words, err := wordsToDict(wordsfile, tmpprefix+".dict")
 	if err != nil {
 		return nil, err
@@ -425,9 +425,5 @@ func Segmentate(wavfile, wordsfile, tmpprefix string) ([]Segment, error) {
 		"-palign", // optionally output phoneme alignments
 		"-input", "file",
 	}
-	segs, err := Run(argv, wavfile)
-	if err != nil {
-		return nil, err
-	}
-	return segs.Segments, nil
+	return run(argv, wavfile)
 }
