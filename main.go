@@ -6,6 +6,7 @@ import (
 
 	"github.com/but80/talklistener/internal/generator"
 	"github.com/but80/talklistener/internal/globalopt"
+	"github.com/but80/talklistener/internal/julius"
 	_ "github.com/theckman/goconstraint/go1.10/gte"
 	"github.com/urfave/cli"
 )
@@ -39,6 +40,11 @@ func main() {
 	app.HelpName = "talklistener"
 	app.UsageText = "talklistener [オプション...] <音声ファイル> [ <テキストファイル> [ <出力ファイル.vsqx> ] ]"
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "dictation-kit, d",
+			Usage: "ディクテーションに使用するキット (" + strings.Join(julius.DictationKitNames, ", ") + ")",
+			Value: "std-gmm",
+		},
 		cli.BoolFlag{
 			Name:  "verbose, v",
 			Usage: "詳細を表示します",
@@ -63,7 +69,7 @@ func main() {
 		txtfile := args[1]
 		outfile := args[2]
 		globalopt.Verbose = ctx.Bool("verbose")
-		if err := generator.Generate(wavfile, txtfile, outfile); err != nil {
+		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-kit"), outfile); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 		return nil

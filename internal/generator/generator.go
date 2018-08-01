@@ -228,7 +228,7 @@ func convertAudioFile(in, out string) error {
 	return nil
 }
 
-func Generate(wavfile, wordsfile, outfile string) error {
+func Generate(wavfile, wordsfile, dictationKitName, outfile string) error {
 	noteOffset := .0
 
 	name := filepath.Base(wavfile)
@@ -285,7 +285,7 @@ func Generate(wavfile, wordsfile, outfile string) error {
 		defer wg.Done()
 		var err error
 		if wordsfile == "" {
-			result, err = julius.Dictate(convertedWavFile, "ssr-dnn")
+			result, err = julius.Dictate(convertedWavFile, dictationKitName)
 		} else {
 			result, err = julius.Segmentate(convertedWavFile, wordsfile, tmpprefix)
 		}

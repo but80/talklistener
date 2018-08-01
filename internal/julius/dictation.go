@@ -1,6 +1,7 @@
 package julius
 
 import (
+	"fmt"
 	"os/user"
 	"path/filepath"
 
@@ -9,19 +10,19 @@ import (
 
 // ArchiveURL: "https://ja.osdn.net/frs/redir.php?m=jaist&f=julius%2F60416%2Fdictation-kit-v4.3.1-osx.tgz"
 
-type config struct {
+type dictationKit struct {
 	kit      string
 	opt      string
 	filename string
 }
 
-var ConfigNames = []string{
+var DictationKitNames = []string{
 	"std-gmm",
 	"std-dnn",
 	"ssr-dnn",
 }
 
-var configs = map[string]config{
+var configs = map[string]dictationKit{
 	"std-gmm": {
 		kit:      "dictation-kit-v4.3.1-osx",
 		opt:      "-C",
@@ -39,13 +40,16 @@ var configs = map[string]config{
 	},
 }
 
-func Dictate(wavfile, filename string) (*Result, error) {
+func Dictate(wavfile, kitName string) (*Result, error) {
 	u, err := user.Current()
 	if err != nil {
 		return nil, errors.Wrap(err, "ホームディレクトリを特定できません")
 	}
 	datadir := filepath.Join(u.HomeDir, ".talklistener")
-	conf := configs[filename]
+	conf, ok := configs[kitName]
+	if !ok {
+		return nil, fmt.Errorf("ディクテーションキット %s は定義されていません", kitName)
+	}
 	kitdir := filepath.Join(datadir, conf.kit)
 	argv := []string{
 		"julius",
