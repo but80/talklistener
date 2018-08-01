@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-var version string
+var version = "unknown"
 
 const description = `
    - イントネーションの抽出に「音声分析変換合成システム WORLD」
@@ -33,16 +33,24 @@ func main() {
 		},
 	}
 	app.HelpName = "talklistener"
-	app.UsageText = "talklistener <音声ファイル.wav> <テキストファイル.txt> [<出力ファイル.vsqx>]"
+	app.UsageText = "talklistener [オプション...] <音声ファイル.wav> <テキストファイル.txt> [<出力ファイル.vsqx>]"
 	app.Flags = []cli.Flag{
 		cli.BoolFlag{
 			Name:  "verbose, v",
 			Usage: "詳細を表示します",
 		},
+		cli.BoolFlag{
+			Name:  "version, V",
+			Usage: "バージョン番号を表示します",
+		},
 	}
 	app.HideVersion = true
 
 	app.Action = func(ctx *cli.Context) error {
+		if ctx.Bool("version") {
+			cli.ShowVersion(ctx)
+			return nil
+		}
 		if ctx.NArg() < 2 {
 			cli.ShowAppHelpAndExit(ctx, 1)
 		}

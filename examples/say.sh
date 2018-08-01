@@ -8,6 +8,5 @@ if ! ( which talklistener >/dev/null ); then
 fi
 
 say -v Kyoko -o say 'これはテストです' || exit $?
-afconvert -f WAVE -d I16@16000 -c 1 -o say.wav say.aiff || exit $?
 echo 'これわてすとです' > say.txt
-talklistener say.wav say.txt say.vsqx
+talklistener say.aiff say.txt say.vsqx

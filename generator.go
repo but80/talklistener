@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/but80/talklistener/internal/segmentation"
 	"github.com/but80/talklistener/internal/vsqx"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -208,6 +210,24 @@ func (gen *generator) dump() {
 	fmt.Println(string(gen.vsqx.Bytes()))
 }
 
+func convertAudioFile(in, out string) error {
+	cmd := exec.Command(
+		"/usr/bin/afconvert",
+		"-f", "WAVE",
+		"-d", "I16@16000",
+		"-c", "1",
+		"-o", out,
+		in,
+	)
+	if captured, err := cmd.CombinedOutput(); err != nil {
+		return errors.Wrapf(err,
+			"afconvert の実行中にエラーが発生しました:\n%s\n%s",
+			strings.Join(cmd.Args, " "), captured,
+		)
+	}
+	return nil
+}
+
 func generate(wavfile, wordsfile, outfile string) error {
 	noteOffset := .0
 
@@ -217,6 +237,11 @@ func generate(wavfile, wordsfile, outfile string) error {
 		return err
 	}
 	tmpprefix := filepath.Join(tmpdir, name)
+
+	convertedWavFile := tmpprefix + ".wav"
+	if err := convertAudioFile(wavfile, convertedWavFile); err != nil {
+		return errors.Wrap(err, "音声ファイルの変換に失敗しました")
+	}
 
 	var wg sync.WaitGroup
 	errch := make(chan error, 9)
@@ -228,7 +253,7 @@ func generate(wavfile, wordsfile, outfile string) error {
 	go func() {
 		defer wg.Done()
 		var err error
-		notes, err = wavToF0Note(wavfile, tmpprefix+".f0", f0FramePeriod)
+		notes, err = wavToF0Note(convertedWavFile, tmpprefix+".f0", f0FramePeriod)
 		if err != nil {
 			errch <- err
 			return
@@ -259,7 +284,7 @@ func generate(wavfile, wordsfile, outfile string) error {
 	go func() {
 		defer wg.Done()
 		var err error
-		segs, err = segmentation.Segmentate(wavfile, wordsfile, tmpprefix)
+		segs, err = segmentation.Segmentate(convertedWavFile, wordsfile, tmpprefix)
 		if err != nil {
 			errch <- err
 			return
