@@ -35,9 +35,11 @@ USAGE:
    talklistener [オプション...] <音声ファイル> <テキストファイル> [<出力ファイル.vsqx>]
 
 GLOBAL OPTIONS:
-   --verbose, -v  詳細を表示します
-   --version, -V  バージョン番号を表示します
-   --help, -h     show help
+   --dictation-kit value, -d value  ディクテーションに使用するキット (std-gmm, std-dnn, ssr-dnn) (default: "std-gmm")
+   --tmpdir value, -t value         中間ファイルを削除せず、指定した名前のディレクトリに保存します
+   --verbose, -v                    詳細を表示します
+   --version, -V                    バージョン番号を表示します
+   --help, -h                       show help
 ```
 
 ### 入力音声ファイル

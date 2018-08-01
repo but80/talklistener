@@ -152,6 +152,7 @@ func Run() error {
 	mg.SerialDeps(Cmodules)
 	args := []string{
 		"run", "main.go",
+		"-t", "output/test.tltmp",
 		// "-v",
 		"input/test.wav", "input/test.txt", "output/test.vsqx",
 	}

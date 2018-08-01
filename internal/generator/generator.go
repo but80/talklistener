@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -228,13 +229,19 @@ func convertAudioFile(in, out string) error {
 	return nil
 }
 
-func Generate(wavfile, wordsfile, dictationKitName, outfile string) error {
+func Generate(wavfile, wordsfile, dictationKitName, tmpdir, outfile string) error {
 	noteOffset := .0
 
 	name := filepath.Base(wavfile)
-	tmpdir, err := ioutil.TempDir("", name)
-	if err != nil {
-		return err
+	if tmpdir == "" {
+		var err error
+		if tmpdir, err = ioutil.TempDir("", name); err != nil {
+			return err
+		}
+	} else if _, err := os.Stat(tmpdir); err != nil {
+		if err := os.Mkdir(tmpdir, 0755); err != nil {
+			return err
+		}
 	}
 	tmpprefix := filepath.Join(tmpdir, name)
 

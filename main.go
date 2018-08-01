@@ -45,6 +45,10 @@ func main() {
 			Usage: "ディクテーションに使用するキット (" + strings.Join(julius.DictationKitNames, ", ") + ")",
 			Value: "std-gmm",
 		},
+		cli.StringFlag{
+			Name:  "tmpdir, t",
+			Usage: "中間ファイルを削除せず、指定した名前のディレクトリに保存します",
+		},
 		cli.BoolFlag{
 			Name:  "verbose, v",
 			Usage: "詳細を表示します",
@@ -69,7 +73,7 @@ func main() {
 		txtfile := args[1]
 		outfile := args[2]
 		globalopt.Verbose = ctx.Bool("verbose")
-		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-kit"), outfile); err != nil {
+		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-kit"), ctx.String("tmpdir"), outfile); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 		return nil

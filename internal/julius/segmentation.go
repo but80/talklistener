@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -412,7 +411,7 @@ func Segmentate(wavfile, wordsfile, tmpprefix string) (*Result, error) {
 	}
 	generateDFA(len(words), tmpprefix+".dfa")
 
-	hmmTmpName := tmpprefix + filepath.Base(hmmDefs)
+	hmmTmpName := tmpprefix + ".binhmm"
 	if err := saveAssetAsFile(hmmDefs, hmmTmpName); err != nil {
 		return nil, err
 	}
