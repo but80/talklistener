@@ -236,11 +236,11 @@ func Generate(wavfile, wordsfile, dictationKitName, tmpdir, outfile string) erro
 	if tmpdir == "" {
 		var err error
 		if tmpdir, err = ioutil.TempDir("", name); err != nil {
-			return err
+			return errors.Wrap(err, "一時ディレクトリの作成に失敗しました")
 		}
 	} else if _, err := os.Stat(tmpdir); err != nil {
 		if err := os.Mkdir(tmpdir, 0755); err != nil {
-			return err
+			return errors.Wrap(err, "一時ディレクトリの作成に失敗しました")
 		}
 	}
 	tmpprefix := filepath.Join(tmpdir, name)
@@ -262,7 +262,7 @@ func Generate(wavfile, wordsfile, dictationKitName, tmpdir, outfile string) erro
 		var err error
 		notes, err = wavToF0Note(convertedWavFile, tmpprefix+".f0", f0FramePeriod)
 		if err != nil {
-			errch <- err
+			errch <- errors.Wrap(err, "基本周波数の推定に失敗しました")
 			return
 		}
 		noteMin := 128.0
@@ -293,12 +293,16 @@ func Generate(wavfile, wordsfile, dictationKitName, tmpdir, outfile string) erro
 		var err error
 		if wordsfile == "" {
 			result, err = julius.Dictate(convertedWavFile, dictationKitName)
+			if err != nil {
+				errch <- errors.Wrap(err, "発話内容の推定に失敗しました")
+				return
+			}
 		} else {
 			result, err = julius.Segmentate(convertedWavFile, wordsfile, tmpprefix)
-		}
-		if err != nil {
-			errch <- err
-			return
+			if err != nil {
+				errch <- errors.Wrap(err, "発音タイミングの推定に失敗しました")
+				return
+			}
 		}
 	}()
 
@@ -350,16 +354,18 @@ func Generate(wavfile, wordsfile, dictationKitName, tmpdir, outfile string) erro
 		}
 
 		if splitConsonant {
-			gen.flush()
+			if err := gen.flush(); err != nil {
+				return errors.Wrap(err, "発音テキストの内容が不正な可能性があります")
+			}
 		}
 		gen.setVowel(beginTime, endTime, unit)
 		if err := gen.flush(); err != nil {
-			return err
+			return errors.Wrap(err, "発音テキストの内容が不正な可能性があります")
 		}
 	}
 
 	if err := ioutil.WriteFile(tmpprefix+".seg", []byte(segsData), 0644); err != nil {
-		return err
+		return errors.Wrap(err, "一時ファイルの保存に失敗しました")
 	}
 
 	gen.feedPitchBends(notes)
@@ -367,5 +373,8 @@ func Generate(wavfile, wordsfile, dictationKitName, tmpdir, outfile string) erro
 		gen.dump()
 		return nil
 	}
-	return gen.save(outfile)
+	if err := gen.save(outfile); err != nil {
+		return errors.Wrap(err, "VSQXの保存に失敗しました")
+	}
+	return nil
 }
