@@ -1,4 +1,4 @@
-package segmentation
+package julius
 
 import (
 	"bufio"
@@ -11,13 +11,10 @@ import (
 	"strings"
 
 	"github.com/but80/talklistener/internal/assets"
-	"github.com/but80/talklistener/internal/julius"
 )
 
 const (
-	framePeriod = 0.01
-	offsetAlign = 0.0125                                                             // offset for result in ms: 25ms / 2
-	hmmDefs     = "/cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm" // monophone model
+	hmmDefs = "/cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm" // monophone model
 	// hmmDefs = "/cmodules/segmentation-kit/models/hmmdefs_ptm_gid.binhmm" // triphone model
 )
 
@@ -396,12 +393,6 @@ func generateDFA(num int, outfile string) error {
 	return file.Close()
 }
 
-type Segment struct {
-	BeginTime float64
-	EndTime   float64
-	Unit      string
-}
-
 func saveAssetAsFile(assetname, filename string) error {
 	file, err := assets.Assets.Open(assetname)
 	if err != nil {
@@ -434,32 +425,9 @@ func Segmentate(wavfile, wordsfile, tmpprefix string) ([]Segment, error) {
 		"-palign", // optionally output phoneme alignments
 		"-input", "file",
 	}
-	segs, err := julius.Run(argv, wavfile)
+	segs, err := Run(argv, wavfile)
 	if err != nil {
 		return nil, err
 	}
-
-	file, err := os.OpenFile(tmpprefix+".seg", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, err
-	}
-
-	result := []Segment{}
-	for _, s := range segs.Segments {
-		seg := Segment{
-			BeginTime: float64(s.BeginFrame) * framePeriod,
-			EndTime:   float64(s.EndFrame+1)*framePeriod + offsetAlign,
-			Unit:      s.Unit,
-		}
-		if s.BeginFrame != 0 {
-			seg.BeginTime += offsetAlign
-		}
-		_, err := fmt.Fprintf(file, "%.7f %.7f %s\n", seg.BeginTime, seg.EndTime, seg.Unit)
-		if err != nil {
-			file.Close()
-			return nil, err
-		}
-		result = append(result, seg)
-	}
-	return result, file.Close()
+	return segs.Segments, nil
 }

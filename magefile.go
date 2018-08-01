@@ -151,7 +151,7 @@ func Install() error {
 func Run() error {
 	mg.SerialDeps(Cmodules)
 	args := []string{
-		"run", "main.go", "generator.go", "f0.go", "fir.go",
+		"run", "main.go",
 		// "-v",
 		"input/test.wav", "input/test.txt", "output/test.vsqx",
 	}

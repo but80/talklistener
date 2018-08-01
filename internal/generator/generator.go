@@ -1,4 +1,4 @@
-package main
+package generator
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/but80/talklistener/internal/segmentation"
+	"github.com/but80/talklistener/internal/julius"
 	"github.com/but80/talklistener/internal/vsqx"
 	"github.com/pkg/errors"
 )
@@ -228,7 +228,7 @@ func convertAudioFile(in, out string) error {
 	return nil
 }
 
-func generate(wavfile, wordsfile, outfile string) error {
+func Generate(wavfile, wordsfile, outfile string) error {
 	noteOffset := .0
 
 	name := filepath.Base(wavfile)
@@ -280,11 +280,11 @@ func generate(wavfile, wordsfile, outfile string) error {
 	}()
 
 	wg.Add(1)
-	segs := []segmentation.Segment{}
+	segs := []julius.Segment{}
 	go func() {
 		defer wg.Done()
 		var err error
-		segs, err = segmentation.Segmentate(convertedWavFile, wordsfile, tmpprefix)
+		segs, err = julius.Segmentate(convertedWavFile, wordsfile, tmpprefix)
 		if err != nil {
 			errch <- err
 			return
@@ -302,7 +302,10 @@ func generate(wavfile, wordsfile, outfile string) error {
 	}
 	gen.reset()
 
+	segsData := ""
 	for _, seg := range segs {
+		segsData += fmt.Sprintf("%.7f %.7f %s\n", seg.BeginTime, seg.EndTime, seg.Unit)
+
 		unit := seg.Unit
 		long := strings.HasSuffix(unit, ":")
 		if long {
@@ -342,6 +345,10 @@ func generate(wavfile, wordsfile, outfile string) error {
 		if err := gen.flush(); err != nil {
 			return err
 		}
+	}
+
+	if err := ioutil.WriteFile(tmpprefix+".seg", []byte(segsData), 0644); err != nil {
+		return err
 	}
 
 	gen.feedPitchBends(notes)

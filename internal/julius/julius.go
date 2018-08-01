@@ -20,9 +20,16 @@ import (
 	"github.com/but80/talklistener/internal/globalopt"
 )
 
+const (
+	framePeriod = 0.01
+	offsetAlign = 0.0125 // offset for result in ms: 25ms / 2
+)
+
 type Segment struct {
 	BeginFrame int
 	EndFrame   int
+	BeginTime  float64
+	EndTime    float64
 	Unit       string
 }
 
@@ -145,11 +152,17 @@ func outputResult(proc *C.RecogProcess, result *Result) {
 					// } else {
 					//   fmt.Printf("%s[%s]", p.name, p.body.defined.name)
 					// }
-					result.Segments = append(result.Segments, Segment{
+					seg := Segment{
 						BeginFrame: begin,
 						EndFrame:   end,
+						BeginTime:  float64(begin) * framePeriod,
+						EndTime:    float64(end+1)*framePeriod + offsetAlign,
 						Unit:       unit,
-					})
+					}
+					if begin != 0 {
+						seg.BeginTime += offsetAlign
+					}
+					result.Segments = append(result.Segments, seg)
 				}
 			}
 		}

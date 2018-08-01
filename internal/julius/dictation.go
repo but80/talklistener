@@ -1,4 +1,4 @@
-package main
+package julius
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/but80/talklistener/internal/julius"
 	"github.com/pkg/errors"
 )
 
@@ -42,7 +41,7 @@ var configs = map[string]config{
 	},
 }
 
-func Dictate(wavfile, filename string) (*julius.Result, error) {
+func Dictate(wavfile, filename string) (*Result, error) {
 	u, err := user.Current()
 	if err != nil {
 		return nil, errors.Wrap(err, "ホームディレクトリを特定できません")
@@ -57,10 +56,10 @@ func Dictate(wavfile, filename string) (*julius.Result, error) {
 		"-palign",
 		"-input", "file",
 	}
-	return julius.Run(argv, wavfile)
+	return Run(argv, wavfile)
 }
 
-func main() {
+func demo() {
 	result, err := Dictate("../../input/zassou1.wav", "ssr-dnn")
 	if err != nil {
 		panic(err)

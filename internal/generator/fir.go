@@ -1,4 +1,4 @@
-package main
+package generator
 
 var firLPF = [][]float64{
 	// fc = 1.0

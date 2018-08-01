@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/but80/talklistener/internal/generator"
 	"github.com/but80/talklistener/internal/globalopt"
 	_ "github.com/theckman/goconstraint/go1.10/gte"
 	"github.com/urfave/cli"
@@ -64,7 +65,7 @@ func main() {
 			outfile = ctx.Args()[2]
 		}
 		globalopt.Verbose = ctx.Bool("verbose")
-		if err := generate(wavfile, txtfile, outfile); err != nil {
+		if err := generator.Generate(wavfile, txtfile, outfile); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 		return nil
