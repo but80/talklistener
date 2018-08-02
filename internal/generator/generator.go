@@ -27,61 +27,6 @@ const (
 	useLPF           = 1
 )
 
-var vowels = map[string]int{
-	"a": 0,
-	"i": 1,
-	"u": 2,
-	"e": 3,
-	"o": 4,
-}
-
-type ConsonantDef struct {
-	Phoneme string
-	Kana    []string
-}
-
-var consonantDefs = map[string]*ConsonantDef{
-	"":   {Phoneme: "", Kana: []string{"あ", "い", "う", "え", "お"}},
-	"k":  {Phoneme: "k", Kana: []string{"か", "き", "く", "け", "こ"}},
-	"s":  {Phoneme: "s", Kana: []string{"さ", "すぃ", "す", "せ", "そ"}},
-	"t":  {Phoneme: "t", Kana: []string{"た", "てぃ", "とぅ", "て", "と"}},
-	"n":  {Phoneme: "n", Kana: []string{"な", "に", "ぬ", "ね", "の"}},
-	"h":  {Phoneme: "h", Kana: []string{"は", "ひ", "ふ", "へ", "ほ"}},
-	"f":  {Phoneme: `p\`, Kana: []string{"ふぁ", "ふぃ", "ふ", "ふぇ", "ふぉ"}},
-	"m":  {Phoneme: "m", Kana: []string{"ま", "み", "む", "め", "も"}},
-	"y":  {Phoneme: "j", Kana: []string{"や", "い", "ゆ", "いぇ", "よ"}},
-	"r":  {Phoneme: "4", Kana: []string{"ら", "り", "る", "れ", "ろ"}},
-	"w":  {Phoneme: "w", Kana: []string{"わ", "うぃ", "う", "うぇ", "うぉ"}},
-	"g":  {Phoneme: "g", Kana: []string{"が", "ぎ", "ぐ", "げ", "ご"}},
-	"z":  {Phoneme: "z", Kana: []string{"ざ", "ずぃ", "ず", "ぜ", "ぞ"}},
-	"d":  {Phoneme: "d", Kana: []string{"だ", "でぃ", "どぅ", "で", "ど"}},
-	"b":  {Phoneme: "b", Kana: []string{"ば", "び", "ぶ", "べ", "ぼ"}},
-	"ky": {Phoneme: "k'", Kana: []string{"きゃ", "き", "きゅ", "きぇ", "きょ"}},
-	"sh": {Phoneme: "S", Kana: []string{"しゃ", "し", "しゅ", "しぇ", "しょ"}},
-	"ty": {Phoneme: "t'", Kana: []string{"てゃ", "てぃ", "てゅ", "て", "てょ"}},
-	"ch": {Phoneme: "tS", Kana: []string{"ちゃ", "ち", "ちゅ", "ちぇ", "ちょ"}},
-	"ny": {Phoneme: "n'", Kana: []string{"にゃ", "に", "にゅ", "にぇ", "にょ"}},
-	"hy": {Phoneme: "C", Kana: []string{"ひゃ", "ひ", "ひゅ", "ひぇ", "ひょ"}},
-	"my": {Phoneme: "m'", Kana: []string{"みゃ", "み", "みゅ", "みぇ", "みょ"}},
-	"ry": {Phoneme: "4'", Kana: []string{"りゃ", "り", "りゅ", "りぇ", "りょ"}},
-	"gy": {Phoneme: "g'", Kana: []string{"ぎゃ", "ぎ", "ぎゅ", "ぎぇ", "ぎょ"}},
-	"j":  {Phoneme: "dZ", Kana: []string{"じゃ", "じ", "じゅ", "じぇ", "じょ"}},
-	"dy": {Phoneme: "d'", Kana: []string{"でゃ", "でぃ", "でゅ", "で", "でょ"}},
-	"by": {Phoneme: "b'", Kana: []string{"びゃ", "び", "びゅ", "びぇ", "びょ"}},
-	"p":  {Phoneme: "p", Kana: []string{"ぱ", "ぴ", "ぷ", "ぺ", "ぽ"}},
-	"py": {Phoneme: "p'", Kana: []string{"ぴゃ", "ぴ", "ぴゅ", "ぴぇ", "ぴょ"}},
-	"ts": {Phoneme: "ts", Kana: []string{"つぁ", "つぃ", "つ", "つぇ", "つぉ"}},
-	"zy": {Phoneme: "z'", Kana: []string{"ずゃ", "ずぃ", "ず", "ずぇ", "ずぉ"}},
-}
-
-var specials = map[string]string{
-	"q":    "",
-	"sp":   "",
-	"silB": "",
-	"silE": "",
-	"N":    "ん",
-}
-
 func timeToTick(time float64) int {
 	return int(math.Round(time / tickTime))
 }
@@ -132,15 +77,15 @@ func (gen *generator) setVowel(begin, end float64, unit string) {
 func (gen *generator) flush() error {
 	var ok bool
 	vowelIndex := -1
-	var cdef *ConsonantDef
+	var cons *julius.Consonant
 
 	if gen.vowel != "" {
-		if vowelIndex, ok = vowels[gen.vowel]; !ok {
+		if vowelIndex, ok = julius.Vowels[gen.vowel]; !ok {
 			return fmt.Errorf("[%s] [%s] の発音を特定できません", gen.consonant, gen.vowel)
 		}
 	}
 	if gen.consonant != "" {
-		if cdef, ok = consonantDefs[gen.consonant]; !ok || len(cdef.Kana) <= vowelIndex {
+		if cons, ok = julius.Consonants[gen.consonant]; !ok || len(cons.Kana) <= vowelIndex {
 			return fmt.Errorf("[%s] [%s] の発音を特定できません", gen.consonant, gen.vowel)
 		}
 	}
@@ -155,7 +100,7 @@ func (gen *generator) flush() error {
 				timeToTick(gen.vowelBeginTime),
 				timeToTick(gen.vowelEndTime),
 				gen.noteCenter,
-				consonantDefs[""].Kana[vowelIndex],
+				julius.Consonants[""].Kana[vowelIndex],
 				"",
 			)
 		}
@@ -168,7 +113,7 @@ func (gen *generator) flush() error {
 				timeToTick(gen.consonantEndTime),
 				gen.noteCenter,
 				gen.consonant,
-				cdef.Phoneme,
+				cons.VSQXPhoneme,
 			)
 		} else {
 			// 子音＋母音
@@ -177,7 +122,7 @@ func (gen *generator) flush() error {
 				timeToTick((gen.consonantBeginTime+gen.vowelBeginTime)/2.0),
 				timeToTick(gen.vowelEndTime),
 				gen.noteCenter,
-				cdef.Kana[vowelIndex],
+				cons.Kana[vowelIndex],
 				"",
 			)
 		}
@@ -246,7 +191,7 @@ func removeExt(filename string) string {
 	return removeExtRx.ReplaceAllString(filename, "")
 }
 
-func Generate(wavfile, wordsfile, dictationModel, objdir, outfile string) error {
+func Generate(wavfile, wordsfile, dictationModel, objdir, outfile string, redictate bool) error {
 	noteOffset := .0
 	if !exists(wavfile) {
 		return fmt.Errorf("%s が見つかりません", wavfile)
@@ -322,7 +267,7 @@ func Generate(wavfile, wordsfile, dictationModel, objdir, outfile string) error 
 	go func() {
 		defer wg.Done()
 		var err error
-		if isEmpty(wordsfile) {
+		if isEmpty(wordsfile) || redictate {
 			result, err = julius.Dictate(convertedWavFile, dictationModel)
 			if err != nil {
 				errch <- errors.Wrap(err, "発話内容の推定に失敗しました")
@@ -369,7 +314,7 @@ func Generate(wavfile, wordsfile, dictationModel, objdir, outfile string) error 
 		beginTime := seg.BeginTime + notesDelay
 		endTime := seg.EndTime + notesDelay
 
-		if s, ok := specials[unit]; ok {
+		if s, ok := julius.SpecialsForVSQX[unit]; ok {
 			gen.flush()
 			if s != "" {
 				gen.vsqx.AddNote(
@@ -385,7 +330,7 @@ func Generate(wavfile, wordsfile, dictationModel, objdir, outfile string) error 
 			continue
 		}
 
-		if _, ok := vowels[unit]; !ok {
+		if _, ok := julius.Vowels[unit]; !ok {
 			if gen.consonant != "" {
 				gen.flush()
 			}

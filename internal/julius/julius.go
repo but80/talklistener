@@ -69,7 +69,8 @@ type Result struct {
 func (result *Result) DictationString() string {
 	s := ""
 	for _, dic := range result.Dictation {
-		s += strings.Join(dic, " ") + "\n"
+		dic = phoneticToKana(dic)
+		s += joinKana(dic) + "\n"
 	}
 	return s
 }
