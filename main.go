@@ -4,7 +4,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/but80/talklistener/internal/generator"
 	"github.com/but80/talklistener/internal/globalopt"
+	"github.com/but80/talklistener/internal/julius"
 	_ "github.com/theckman/goconstraint/go1.10/gte"
 	"github.com/urfave/cli"
 )
@@ -36,14 +38,39 @@ func main() {
 		},
 	}
 	app.HelpName = "talklistener"
-	app.UsageText = "talklistener [オプション...] <音声ファイル> <テキストファイル> [<出力ファイル.vsqx>]"
+	app.UsageText = "talklistener [オプション...] <音声ファイル>"
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "out, o",
+			Usage: `生成結果を指定した名前で保存します（省略時は "音声ファイル名.vsqx"）`,
+		},
+		cli.StringFlag{
+			Name:  "text, t",
+			Usage: `テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）`,
+		},
+		cli.BoolFlag{
+			Name:  "redictate, r",
+			Usage: "発話内容の再認識を行い、その結果をテキストファイルに上書き保存します",
+		},
+		cli.StringFlag{
+			Name:  "dictation-model, d",
+			Usage: "発話内容の認識に使用するモデル (" + strings.Join(julius.DictationModelNames, ", ") + ")",
+			Value: "ssr-dnn",
+		},
+		cli.BoolFlag{
+			Name:  "leave-obj, l",
+			Usage: `中間オブジェクトを削除せず、ディレクトリ "音声ファイル名.tlo/" に保存します`,
+		},
 		cli.BoolFlag{
 			Name:  "verbose, v",
 			Usage: "詳細を表示します",
 		},
 		cli.BoolFlag{
-			Name:  "version, V",
+			Name:  "debug",
+			Usage: "デバッグ情報を表示します",
+		},
+		cli.BoolFlag{
+			Name:  "version",
 			Usage: "バージョン番号を表示します",
 		},
 	}
@@ -54,17 +81,15 @@ func main() {
 			cli.ShowVersion(ctx)
 			return nil
 		}
-		if ctx.NArg() < 2 {
+		if ctx.NArg() < 1 {
 			cli.ShowAppHelpAndExit(ctx, 1)
 		}
 		wavfile := ctx.Args()[0]
-		txtfile := ctx.Args()[1]
-		outfile := ""
-		if 3 <= ctx.NArg() {
-			outfile = ctx.Args()[2]
-		}
+		txtfile := ctx.String("text")
+		outfile := ctx.String("out")
 		globalopt.Verbose = ctx.Bool("verbose")
-		if err := generate(wavfile, txtfile, outfile); err != nil {
+		globalopt.Debug = ctx.Bool("debug")
+		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-model"), outfile, ctx.Bool("redictate"), ctx.Bool("leave-obj")); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 		return nil

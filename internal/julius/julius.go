@@ -7,30 +7,78 @@ package julius
 
 void onResult(Recog *recog, void *data);
 
-static void _register_callback_result(Recog *recog, void *data) {
+static void _register_callback_result(Recog* recog, void* data) {
 	callback_add(recog, CALLBACK_RESULT, onResult, data);
+}
+
+static Sentence* _read_sentence_array(Sentence* p, int index) {
+	return p + index;
+}
+static float _read_float_array(float* p, int index) {
+	return p[index];
+}
+static int _read_int_array(int* p, int index) {
+	return p[index];
+}
+static unsigned char _read_uchar_array(unsigned char* p, int index) {
+	return p[index];
+}
+static HMM_Logical* _read_hmm_logical(HMM_Logical** p, int index) {
+	return p[index];
+}
+static HMM_Logical** _read_hmm_logical_ptr(HMM_Logical*** p, int index) {
+	return p[index];
 }
 */
 import "C"
 import (
 	"fmt"
+	"strings"
+	"time"
 	"unsafe"
 
 	"github.com/but80/talklistener/internal/globalopt"
 )
 
+func cStringArray(a []string) []*C.char {
+	result := make([]*C.char, len(a))
+	for i, s := range a {
+		result[i] = C.CString(s)
+	}
+	return result
+}
+
+const (
+	framePeriod = 0.01
+	offsetAlign = 0.0125 // offset for result in ms: 25ms / 2
+)
+
 type Segment struct {
 	BeginFrame int
 	EndFrame   int
+	BeginTime  float64
+	EndTime    float64
 	Unit       string
+	Score      float64
 }
 
 type Result struct {
-	Segments []Segment
+	Dictation [][]string
+	Segments  []Segment
+	completed bool
 }
 
-func Run(argv []string, wavfile string) (*Result, error) {
-	if globalopt.Verbose {
+func (result *Result) DictationString() string {
+	s := ""
+	for _, dic := range result.Dictation {
+		dic = phoneticToKana(dic)
+		s += joinKana(dic) + "\n"
+	}
+	return s
+}
+
+func run(argv []string, wavfile string) (*Result, error) {
+	if globalopt.Debug {
 		C.j_enable_debug_message()
 	}
 	if !globalopt.Verbose {
@@ -72,6 +120,9 @@ func Run(argv []string, wavfile string) (*Result, error) {
 		}
 		return nil, fmt.Errorf("Julius: 音声認識に失敗しました")
 	}
+	for !result.completed {
+		time.Sleep(10 * time.Millisecond)
+	}
 
 	C.j_recog_free(recog)
 	return result, nil
@@ -79,31 +130,83 @@ func Run(argv []string, wavfile string) (*Result, error) {
 
 //export onResult
 func onResult(recog *C.Recog, data unsafe.Pointer) {
+	result := (*Result)(data)
+	defer func() {
+		result.completed = true
+	}()
+	if recog == nil {
+		return
+	}
 	proc := recog.process_list
 	for proc != nil {
-		outputResult(proc, (*Result)(data))
+		result.update(proc)
 		proc = proc.next
 	}
 }
 
-func outputResult(proc *C.RecogProcess, result *Result) {
-	if proc.live == 0 {
+func centerName(s string) string {
+	if i := strings.Index(s, "-"); 0 <= i {
+		s = s[i+1:]
+	}
+	if i := strings.LastIndex(s, "+"); 0 <= i {
+		s = s[:i]
+	}
+	if i := strings.Index(s, "_"); 0 <= i {
+		s = s[:i]
+	}
+	return s
+}
+
+func (result *Result) update(proc *C.RecogProcess) {
+	if proc == nil || proc.live == 0 || proc.result.status < 0 || proc.lm == nil {
 		return
 	}
-	if proc.result.status < 0 {
-		fmt.Printf("no results obtained: %d\n", proc.result.status)
+	winfo := proc.lm.winfo
+	if winfo == nil {
 		return
 	}
 	sentnum := int(proc.result.sentnum)
 	for i := 0; i < sentnum; i++ {
-		sent := readSentence(proc.result.sent, i)
+		if proc.result.sent == nil {
+			continue
+		}
+		sent := C._read_sentence_array(proc.result.sent, C.int(i))
+		if sent == nil {
+			continue
+		}
+		if unsafe.Pointer(&sent.word[0]) != nil {
+			seqnum := int(sent.word_num)
+			if len(sent.word) < seqnum {
+				seqnum = len(sent.word)
+			}
+			dictation := []string{}
+			for i := 0; i < seqnum; i++ {
+				w := int(sent.word[i])
+				wl := int(C._read_uchar_array(winfo.wlen, C.int(w)))
+				for j := 0; j < wl; j++ {
+					p := C._read_hmm_logical_ptr(winfo.wseq, C.int(w))
+					if p == nil {
+						continue
+					}
+					ws := C._read_hmm_logical(p, C.int(j))
+					if ws == nil {
+						continue
+					}
+					unit := C.GoString(ws.name)
+					dictation = append(dictation, centerName(unit))
+				}
+			}
+			result.Dictation = append(result.Dictation, dictation)
+		}
+
 		for align := sent.align; align != nil; align = align.next {
-			for i := 0; i < int(align.num); i++ {
-				// align.avgscore[i]
+			segnum := int(align.num)
+			for i := 0; i < segnum; i++ {
+				score := float64(C._read_float_array(align.avgscore, C.int(i)))
 				if align.unittype == C.PER_PHONEME {
-					begin := int(readCIntArray(align.begin_frame, i))
-					end := int(readCIntArray(align.end_frame, i))
-					p := readHMMLogical(align.ph, i)
+					begin := int(C._read_int_array(align.begin_frame, C.int(i)))
+					end := int(C._read_int_array(align.end_frame, C.int(i)))
+					p := C._read_hmm_logical(align.ph, C.int(i))
 					unit := C.GoString(p.name)
 					// if p.is_pseudo != 0 {
 					//   fmt.Printf("{%s}", p.name)
@@ -112,39 +215,20 @@ func outputResult(proc *C.RecogProcess, result *Result) {
 					// } else {
 					//   fmt.Printf("%s[%s]", p.name, p.body.defined.name)
 					// }
-					result.Segments = append(result.Segments, Segment{
+					seg := Segment{
 						BeginFrame: begin,
 						EndFrame:   end,
+						BeginTime:  float64(begin) * framePeriod,
+						EndTime:    float64(end+1)*framePeriod + offsetAlign,
 						Unit:       unit,
-					})
+						Score:      score,
+					}
+					if begin != 0 {
+						seg.BeginTime += offsetAlign
+					}
+					result.Segments = append(result.Segments, seg)
 				}
 			}
 		}
 	}
-}
-
-func cStringArray(a []string) []*C.char {
-	result := make([]*C.char, len(a))
-	for i, s := range a {
-		result[i] = C.CString(s)
-	}
-	return result
-}
-
-func readHMMLogical(p **C.HMM_Logical, index int) *C.HMM_Logical {
-	size := unsafe.Sizeof(*p)
-	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
-	return *(**C.HMM_Logical)(ptr)
-}
-
-func readSentence(p *C.Sentence, index int) *C.Sentence {
-	size := unsafe.Sizeof(*p)
-	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
-	return (*C.Sentence)(ptr)
-}
-
-func readCIntArray(p *C.int, index int) C.int {
-	size := unsafe.Sizeof(*p)
-	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
-	return *(*C.int)(ptr)
 }

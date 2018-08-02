@@ -1,24 +1,8 @@
-package segmentation
+package julius
 
 import (
-	"bufio"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
-
-	"github.com/but80/talklistener/internal/assets"
-	"github.com/but80/talklistener/internal/julius"
-)
-
-const (
-	framePeriod = 0.01
-	offsetAlign = 0.0125                                                             // offset for result in ms: 25ms / 2
-	hmmDefs     = "/cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm" // monophone model
-	// hmmDefs = "/cmodules/segmentation-kit/models/hmmdefs_ptm_gid.binhmm" // triphone model
 )
 
 var kanaToPhoneticTable = [][2]string{
@@ -331,135 +315,130 @@ func kanaToPhonetic(line string) string {
 	return line
 }
 
-func wordsToDict(infile, outfile string) ([]string, error) {
-	words, err := loadWords(infile)
-	if err != nil {
-		return nil, err
-	}
-
-	file, err := os.OpenFile(outfile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, err
-	}
-
-	for i, w := range words {
-		_, err := fmt.Fprintf(file, "%d [w_%d] %s\n", i, i, w)
-		if err != nil {
-			file.Close()
-			return nil, err
-		}
-	}
-	return words, file.Close()
+var Vowels = map[string]int{
+	"a": 0,
+	"i": 1,
+	"u": 2,
+	"e": 3,
+	"o": 4,
 }
 
-func loadWords(filename string) ([]string, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	reader := bufio.NewReader(file)
-	words := []string{"silB"}
-	for {
-		line, err := reader.ReadString('\n')
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return nil, err
-		}
-		words = append(words, kanaToPhonetic(line))
-	}
-	words = append(words, "silE")
-	return words, nil
+type Consonant struct {
+	VSQXPhoneme string
+	Kana        []string
 }
 
-func generateDFA(num int, outfile string) error {
-	file, err := os.OpenFile(outfile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-
-	num--
-	first := 1
-	for i := 0; i <= num; i++ {
-		if _, err := fmt.Fprintf(file, "%d %d %d 0 %d\n", i, num-i, i+1, first); err != nil {
-			file.Close()
-			return err
-		}
-		first = 0
-	}
-	if _, err := fmt.Fprintf(file, "%d -1 -1 1 0\n", num+1); err != nil {
-		file.Close()
-		return err
-	}
-	return file.Close()
+var Consonants = map[string]*Consonant{
+	"":   {VSQXPhoneme: "", Kana: []string{"あ", "い", "う", "え", "お"}},
+	"k":  {VSQXPhoneme: "k", Kana: []string{"か", "き", "く", "け", "こ"}},
+	"s":  {VSQXPhoneme: "s", Kana: []string{"さ", "すぃ", "す", "せ", "そ"}},
+	"t":  {VSQXPhoneme: "t", Kana: []string{"た", "てぃ", "とぅ", "て", "と"}},
+	"n":  {VSQXPhoneme: "n", Kana: []string{"な", "に", "ぬ", "ね", "の"}},
+	"h":  {VSQXPhoneme: "h", Kana: []string{"は", "ひ", "ふ", "へ", "ほ"}},
+	"f":  {VSQXPhoneme: `p\`, Kana: []string{"ふぁ", "ふぃ", "ふ", "ふぇ", "ふぉ"}},
+	"m":  {VSQXPhoneme: "m", Kana: []string{"ま", "み", "む", "め", "も"}},
+	"y":  {VSQXPhoneme: "j", Kana: []string{"や", "い", "ゆ", "いぇ", "よ"}},
+	"r":  {VSQXPhoneme: "4", Kana: []string{"ら", "り", "る", "れ", "ろ"}},
+	"w":  {VSQXPhoneme: "w", Kana: []string{"わ", "うぃ", "う", "うぇ", "うぉ"}},
+	"g":  {VSQXPhoneme: "g", Kana: []string{"が", "ぎ", "ぐ", "げ", "ご"}},
+	"z":  {VSQXPhoneme: "z", Kana: []string{"ざ", "ずぃ", "ず", "ぜ", "ぞ"}},
+	"d":  {VSQXPhoneme: "d", Kana: []string{"だ", "でぃ", "どぅ", "で", "ど"}},
+	"b":  {VSQXPhoneme: "b", Kana: []string{"ば", "び", "ぶ", "べ", "ぼ"}},
+	"ky": {VSQXPhoneme: "k'", Kana: []string{"きゃ", "き", "きゅ", "きぇ", "きょ"}},
+	"sh": {VSQXPhoneme: "S", Kana: []string{"しゃ", "し", "しゅ", "しぇ", "しょ"}},
+	"ty": {VSQXPhoneme: "t'", Kana: []string{"てゃ", "てぃ", "てゅ", "て", "てょ"}},
+	"ch": {VSQXPhoneme: "tS", Kana: []string{"ちゃ", "ち", "ちゅ", "ちぇ", "ちょ"}},
+	"ny": {VSQXPhoneme: "n'", Kana: []string{"にゃ", "に", "にゅ", "にぇ", "にょ"}},
+	"hy": {VSQXPhoneme: "C", Kana: []string{"ひゃ", "ひ", "ひゅ", "ひぇ", "ひょ"}},
+	"my": {VSQXPhoneme: "m'", Kana: []string{"みゃ", "み", "みゅ", "みぇ", "みょ"}},
+	"ry": {VSQXPhoneme: "4'", Kana: []string{"りゃ", "り", "りゅ", "りぇ", "りょ"}},
+	"gy": {VSQXPhoneme: "g'", Kana: []string{"ぎゃ", "ぎ", "ぎゅ", "ぎぇ", "ぎょ"}},
+	"j":  {VSQXPhoneme: "dZ", Kana: []string{"じゃ", "じ", "じゅ", "じぇ", "じょ"}},
+	"dy": {VSQXPhoneme: "d'", Kana: []string{"でゃ", "でぃ", "でゅ", "で", "でょ"}},
+	"by": {VSQXPhoneme: "b'", Kana: []string{"びゃ", "び", "びゅ", "びぇ", "びょ"}},
+	"p":  {VSQXPhoneme: "p", Kana: []string{"ぱ", "ぴ", "ぷ", "ぺ", "ぽ"}},
+	"py": {VSQXPhoneme: "p'", Kana: []string{"ぴゃ", "ぴ", "ぴゅ", "ぴぇ", "ぴょ"}},
+	"ts": {VSQXPhoneme: "ts", Kana: []string{"つぁ", "つぃ", "つ", "つぇ", "つぉ"}},
+	"zy": {VSQXPhoneme: "z'", Kana: []string{"ずゃ", "ずぃ", "ず", "ずぇ", "ずぉ"}},
 }
 
-type Segment struct {
-	BeginTime float64
-	EndTime   float64
-	Unit      string
+var specials = map[string]string{
+	"q":    "っ",
+	"sp":   "sp",
+	"silB": "",
+	"silE": "",
+	"N":    "ん",
 }
 
-func saveAssetAsFile(assetname, filename string) error {
-	file, err := assets.Assets.Open(assetname)
-	if err != nil {
-		return err
-	}
-	data, err := ioutil.ReadAll(file)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(filename, data, 0644)
+var SpecialsForVSQX = map[string]string{
+	"q":    "",
+	"sp":   "",
+	"silB": "",
+	"silE": "",
+	"N":    "ん",
 }
 
-func Segmentate(wavfile, wordsfile, tmpprefix string) ([]Segment, error) {
-	words, err := wordsToDict(wordsfile, tmpprefix+".dict")
-	if err != nil {
-		return nil, err
+func splitLong(vs string) (string, bool) {
+	if strings.HasSuffix(vs, ":") {
+		return vs[:len(vs)-1], true
 	}
-	generateDFA(len(words), tmpprefix+".dfa")
+	return vs, false
+}
 
-	hmmTmpName := tmpprefix + filepath.Base(hmmDefs)
-	if err := saveAssetAsFile(hmmDefs, hmmTmpName); err != nil {
-		return nil, err
+func splitVowel(vs string) (vi int, long bool, ok bool) {
+	vs, long = splitLong(vs)
+	if vi, ok = Vowels[vs]; ok {
+		return
 	}
+	vi = -1
+	return
+}
 
-	argv := []string{
-		"julius",
-		"-h", hmmTmpName, // HMM definition
-		"-dfa", tmpprefix + ".dfa", // DFA grammar
-		"-v", tmpprefix + ".dict", // dictionary
-		"-palign", // optionally output phoneme alignments
-		"-input", "file",
-	}
-	segs, err := julius.Run(argv, wavfile)
-	if err != nil {
-		return nil, err
-	}
-
-	file, err := os.OpenFile(tmpprefix+".seg", os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	if err != nil {
-		return nil, err
-	}
-
-	result := []Segment{}
-	for _, s := range segs.Segments {
-		seg := Segment{
-			BeginTime: float64(s.BeginFrame) * framePeriod,
-			EndTime:   float64(s.EndFrame+1)*framePeriod + offsetAlign,
-			Unit:      s.Unit,
+func phoneticToKana(p []string) []string {
+	result := []string{}
+	for i := 0; i < len(p); i++ {
+		v, long, ok := splitVowel(p[i])
+		if ok {
+			result = append(result, Consonants[""].Kana[v])
+			if long {
+				result = append(result, "ー")
+			}
+			continue
 		}
-		if s.BeginFrame != 0 {
-			seg.BeginTime += offsetAlign
+		c := p[i]
+		if i+1 < len(p) {
+			v, long, _ = splitVowel(p[i+1])
 		}
-		_, err := fmt.Fprintf(file, "%.7f %.7f %s\n", seg.BeginTime, seg.EndTime, seg.Unit)
-		if err != nil {
-			file.Close()
-			return nil, err
+		cons, ok := Consonants[c]
+		if ok && 0 <= v && v < len(cons.Kana) {
+			result = append(result, cons.Kana[v])
+			if long {
+				result = append(result, "ー")
+			}
+			i++
+			continue
 		}
-		result = append(result, seg)
+		if s, ok := specials[c]; ok {
+			c = s
+		}
+		if c != "" {
+			result = append(result, c)
+		}
 	}
-	return result, file.Close()
+	return result
+}
+
+var joinKanaRx1 = regexp.MustCompile(`^\w+$`)
+var joinKanaRx2 = regexp.MustCompile(`\s+`)
+
+func joinKana(k []string) string {
+	result := ""
+	for _, s := range k {
+		if joinKanaRx1.MatchString(s) {
+			result += " " + s + " "
+		} else {
+			result += s
+		}
+	}
+	return joinKanaRx2.ReplaceAllString(strings.TrimSpace(result), " ")
 }

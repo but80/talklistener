@@ -1,15 +1,18 @@
-package main
+package generator
 
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math"
+	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 
-	"github.com/but80/talklistener/internal/segmentation"
+	"github.com/but80/talklistener/internal/julius"
 	"github.com/but80/talklistener/internal/vsqx"
 	"github.com/pkg/errors"
 )
@@ -24,61 +27,6 @@ const (
 	splitConsonant   = true
 	useLPF           = 1
 )
-
-var vowels = map[string]int{
-	"a": 0,
-	"i": 1,
-	"u": 2,
-	"e": 3,
-	"o": 4,
-}
-
-type ConsonantDef struct {
-	Phoneme string
-	Kana    []string
-}
-
-var consonantDefs = map[string]*ConsonantDef{
-	"":   {Phoneme: "", Kana: []string{"あ", "い", "う", "え", "お"}},
-	"k":  {Phoneme: "k", Kana: []string{"か", "き", "く", "け", "こ"}},
-	"s":  {Phoneme: "s", Kana: []string{"さ", "すぃ", "す", "せ", "そ"}},
-	"t":  {Phoneme: "t", Kana: []string{"た", "てぃ", "とぅ", "て", "と"}},
-	"n":  {Phoneme: "n", Kana: []string{"な", "に", "ぬ", "ね", "の"}},
-	"h":  {Phoneme: "h", Kana: []string{"は", "ひ", "ふ", "へ", "ほ"}},
-	"f":  {Phoneme: `p\`, Kana: []string{"ふぁ", "ふぃ", "ふ", "ふぇ", "ふぉ"}},
-	"m":  {Phoneme: "m", Kana: []string{"ま", "み", "む", "め", "も"}},
-	"y":  {Phoneme: "j", Kana: []string{"や", "い", "ゆ", "いぇ", "よ"}},
-	"r":  {Phoneme: "4", Kana: []string{"ら", "り", "る", "れ", "ろ"}},
-	"w":  {Phoneme: "w", Kana: []string{"わ", "うぃ", "う", "うぇ", "うぉ"}},
-	"g":  {Phoneme: "g", Kana: []string{"が", "ぎ", "ぐ", "げ", "ご"}},
-	"z":  {Phoneme: "z", Kana: []string{"ざ", "ずぃ", "ず", "ぜ", "ぞ"}},
-	"d":  {Phoneme: "d", Kana: []string{"だ", "でぃ", "どぅ", "で", "ど"}},
-	"b":  {Phoneme: "b", Kana: []string{"ば", "び", "ぶ", "べ", "ぼ"}},
-	"ky": {Phoneme: "k'", Kana: []string{"きゃ", "き", "きゅ", "きぇ", "きょ"}},
-	"sh": {Phoneme: "S", Kana: []string{"しゃ", "し", "しゅ", "しぇ", "しょ"}},
-	"ty": {Phoneme: "t'", Kana: []string{"てゃ", "てぃ", "てゅ", "て", "てょ"}},
-	"ch": {Phoneme: "tS", Kana: []string{"ちゃ", "ち", "ちゅ", "ちぇ", "ちょ"}},
-	"ny": {Phoneme: "n'", Kana: []string{"にゃ", "に", "にゅ", "にぇ", "にょ"}},
-	"hy": {Phoneme: "C", Kana: []string{"ひゃ", "ひ", "ひゅ", "ひぇ", "ひょ"}},
-	"my": {Phoneme: "m'", Kana: []string{"みゃ", "み", "みゅ", "みぇ", "みょ"}},
-	"ry": {Phoneme: "4'", Kana: []string{"りゃ", "り", "りゅ", "りぇ", "りょ"}},
-	"gy": {Phoneme: "g'", Kana: []string{"ぎゃ", "ぎ", "ぎゅ", "ぎぇ", "ぎょ"}},
-	"j":  {Phoneme: "dZ", Kana: []string{"じゃ", "じ", "じゅ", "じぇ", "じょ"}},
-	"dy": {Phoneme: "d'", Kana: []string{"でゃ", "でぃ", "でゅ", "で", "でょ"}},
-	"by": {Phoneme: "b'", Kana: []string{"びゃ", "び", "びゅ", "びぇ", "びょ"}},
-	"p":  {Phoneme: "p", Kana: []string{"ぱ", "ぴ", "ぷ", "ぺ", "ぽ"}},
-	"py": {Phoneme: "p'", Kana: []string{"ぴゃ", "ぴ", "ぴゅ", "ぴぇ", "ぴょ"}},
-	"ts": {Phoneme: "ts", Kana: []string{"つぁ", "つぃ", "つ", "つぇ", "つぉ"}},
-	"zy": {Phoneme: "z'", Kana: []string{"ずゃ", "ずぃ", "ず", "ずぇ", "ずぉ"}},
-}
-
-var specials = map[string]string{
-	"q":    "",
-	"sp":   "",
-	"silB": "",
-	"silE": "",
-	"N":    "ん",
-}
 
 func timeToTick(time float64) int {
 	return int(math.Round(time / tickTime))
@@ -130,15 +78,15 @@ func (gen *generator) setVowel(begin, end float64, unit string) {
 func (gen *generator) flush() error {
 	var ok bool
 	vowelIndex := -1
-	var cdef *ConsonantDef
+	var cons *julius.Consonant
 
 	if gen.vowel != "" {
-		if vowelIndex, ok = vowels[gen.vowel]; !ok {
+		if vowelIndex, ok = julius.Vowels[gen.vowel]; !ok {
 			return fmt.Errorf("[%s] [%s] の発音を特定できません", gen.consonant, gen.vowel)
 		}
 	}
 	if gen.consonant != "" {
-		if cdef, ok = consonantDefs[gen.consonant]; !ok || len(cdef.Kana) <= vowelIndex {
+		if cons, ok = julius.Consonants[gen.consonant]; !ok || len(cons.Kana) <= vowelIndex {
 			return fmt.Errorf("[%s] [%s] の発音を特定できません", gen.consonant, gen.vowel)
 		}
 	}
@@ -153,7 +101,7 @@ func (gen *generator) flush() error {
 				timeToTick(gen.vowelBeginTime),
 				timeToTick(gen.vowelEndTime),
 				gen.noteCenter,
-				consonantDefs[""].Kana[vowelIndex],
+				julius.Consonants[""].Kana[vowelIndex],
 				"",
 			)
 		}
@@ -166,7 +114,7 @@ func (gen *generator) flush() error {
 				timeToTick(gen.consonantEndTime),
 				gen.noteCenter,
 				gen.consonant,
-				cdef.Phoneme,
+				cons.VSQXPhoneme,
 			)
 		} else {
 			// 子音＋母音
@@ -175,7 +123,7 @@ func (gen *generator) flush() error {
 				timeToTick((gen.consonantBeginTime+gen.vowelBeginTime)/2.0),
 				timeToTick(gen.vowelEndTime),
 				gen.noteCenter,
-				cdef.Kana[vowelIndex],
+				cons.Kana[vowelIndex],
 				"",
 			)
 		}
@@ -211,6 +159,7 @@ func (gen *generator) dump() {
 }
 
 func convertAudioFile(in, out string) error {
+	log.Println("音声ファイルのフォーマットを変換中...")
 	cmd := exec.Command(
 		"/usr/bin/afconvert",
 		"-f", "WAVE",
@@ -228,21 +177,54 @@ func convertAudioFile(in, out string) error {
 	return nil
 }
 
-func generate(wavfile, wordsfile, outfile string) error {
+func exists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
+
+func isEmpty(filename string) bool {
+	s, err := os.Stat(filename)
+	return err != nil || s.Size() == 0
+}
+
+var removeExtRx = regexp.MustCompile(`\.[^\.]+$`)
+
+func removeExt(filename string) string {
+	return removeExtRx.ReplaceAllString(filename, "")
+}
+
+func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, leaveObj bool) error {
 	noteOffset := .0
+	if !exists(wavfile) {
+		return fmt.Errorf("%s が見つかりません", wavfile)
+	}
+	if wordsfile == "" {
+		wordsfile = removeExt(wavfile) + ".txt"
+	}
+	if outfile == "" {
+		outfile = removeExt(wavfile) + ".vsqx"
+	}
 
 	name := filepath.Base(wavfile)
-	tmpdir, err := ioutil.TempDir("", name)
-	if err != nil {
-		return err
+	objdir := removeExt(wavfile) + ".tlo"
+	if !leaveObj {
+		var err error
+		if objdir, err = ioutil.TempDir("", name); err != nil {
+			return errors.Wrap(err, "一時ディレクトリの作成に失敗しました")
+		}
+	} else if _, err := os.Stat(objdir); err != nil {
+		if err := os.Mkdir(objdir, 0755); err != nil {
+			return errors.Wrap(err, "一時ディレクトリの作成に失敗しました")
+		}
 	}
-	tmpprefix := filepath.Join(tmpdir, name)
+	objPrefix := filepath.Join(objdir, name)
 
-	convertedWavFile := tmpprefix + ".wav"
+	convertedWavFile := objPrefix + ".wav"
 	if err := convertAudioFile(wavfile, convertedWavFile); err != nil {
 		return errors.Wrap(err, "音声ファイルの変換に失敗しました")
 	}
 
+	parallel := false
 	var wg sync.WaitGroup
 	errch := make(chan error, 9)
 
@@ -253,9 +235,9 @@ func generate(wavfile, wordsfile, outfile string) error {
 	go func() {
 		defer wg.Done()
 		var err error
-		notes, err = wavToF0Note(convertedWavFile, tmpprefix+".f0", f0FramePeriod)
+		notes, err = wavToF0Note(convertedWavFile, objPrefix+".f0", f0FramePeriod)
 		if err != nil {
-			errch <- err
+			errch <- errors.Wrap(err, "基本周波数の推定に失敗しました")
 			return
 		}
 		noteMin := 128.0
@@ -272,6 +254,7 @@ func generate(wavfile, wordsfile, outfile string) error {
 		}
 		noteCenter = int(math.Round((noteMax + noteMin) / 2.0))
 
+		log.Println("基本周波数の変動をフィルタリング中...")
 		notes = resample(notes, resampleRate)
 		if 0 <= useLPF {
 			notes = convolve(notes, firLPF[useLPF])
@@ -279,15 +262,36 @@ func generate(wavfile, wordsfile, outfile string) error {
 		}
 	}()
 
+	if !parallel {
+		wg.Wait()
+	}
+
 	wg.Add(1)
-	segs := []segmentation.Segment{}
+	var result *julius.Result
 	go func() {
 		defer wg.Done()
 		var err error
-		segs, err = segmentation.Segmentate(convertedWavFile, wordsfile, tmpprefix)
-		if err != nil {
-			errch <- err
-			return
+		if isEmpty(wordsfile) || redictate {
+			result, err = julius.Dictate(convertedWavFile, dictationModel)
+			if err != nil {
+				errch <- errors.Wrap(err, "発話内容の推定に失敗しました")
+				return
+			}
+			b := []byte(result.DictationString())
+			if len(b) == 0 {
+				errch <- errors.Wrap(err, "音声ファイル中に認識可能な発話がありませんでした")
+				return
+			}
+			if err := ioutil.WriteFile(wordsfile, b, 0644); err != nil {
+				errch <- errors.Wrap(err, "推定した発話内容の保存に失敗しました")
+				return
+			}
+		} else {
+			result, err = julius.Segmentate(convertedWavFile, wordsfile, objPrefix)
+			if err != nil {
+				errch <- errors.Wrap(err, "発音タイミングの推定に失敗しました")
+				return
+			}
 		}
 	}()
 
@@ -302,7 +306,11 @@ func generate(wavfile, wordsfile, outfile string) error {
 	}
 	gen.reset()
 
-	for _, seg := range segs {
+	log.Println("VSQXを生成中...")
+	segsData := ""
+	for _, seg := range result.Segments {
+		segsData += fmt.Sprintf("%.7f %.7f %s\n", seg.BeginTime, seg.EndTime, seg.Unit)
+
 		unit := seg.Unit
 		long := strings.HasSuffix(unit, ":")
 		if long {
@@ -311,7 +319,7 @@ func generate(wavfile, wordsfile, outfile string) error {
 		beginTime := seg.BeginTime + notesDelay
 		endTime := seg.EndTime + notesDelay
 
-		if s, ok := specials[unit]; ok {
+		if s, ok := julius.SpecialsForVSQX[unit]; ok {
 			gen.flush()
 			if s != "" {
 				gen.vsqx.AddNote(
@@ -327,7 +335,7 @@ func generate(wavfile, wordsfile, outfile string) error {
 			continue
 		}
 
-		if _, ok := vowels[unit]; !ok {
+		if _, ok := julius.Vowels[unit]; !ok {
 			if gen.consonant != "" {
 				gen.flush()
 			}
@@ -336,18 +344,29 @@ func generate(wavfile, wordsfile, outfile string) error {
 		}
 
 		if splitConsonant {
-			gen.flush()
+			if err := gen.flush(); err != nil {
+				return errors.Wrap(err, "発音テキストの内容が不正な可能性があります")
+			}
 		}
 		gen.setVowel(beginTime, endTime, unit)
 		if err := gen.flush(); err != nil {
-			return err
+			return errors.Wrap(err, "発音テキストの内容が不正な可能性があります")
 		}
+	}
+	if err := gen.flush(); err != nil {
+		return errors.Wrap(err, "発音テキストの内容が不正な可能性があります")
+	}
+
+	if err := ioutil.WriteFile(objPrefix+".seg", []byte(segsData), 0644); err != nil {
+		return errors.Wrap(err, "一時ファイルの保存に失敗しました")
 	}
 
 	gen.feedPitchBends(notes)
-	if outfile == "" {
-		gen.dump()
-		return nil
+	if err := gen.save(outfile); err != nil {
+		return errors.Wrap(err, "VSQXの保存に失敗しました")
 	}
-	return gen.save(outfile)
+
+	log.Printf("出力ノート数: %d\n", gen.vsqx.NoteCount())
+	log.Println("完了")
+	return nil
 }

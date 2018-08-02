@@ -191,6 +191,8 @@ type VSQ3 struct {
 	SETrack        SETrack
 	KaraokeTrack   KaraokeTrack
 	AUX            AUX
+
+	noteCount int `xml:"-"`
 }
 
 func Load(filename string) (*VSQ3, error) {
@@ -356,6 +358,11 @@ func (vsq3 *VSQ3) AddNote(velocity, beginTick, endTick, note int, lyrics, phnms 
 			{ID: "vibType", Value: 0},
 		},
 	})
+	vsq3.noteCount++
+}
+
+func (vsq3 *VSQ3) NoteCount() int {
+	return vsq3.noteCount
 }
 
 func (vsq3 *VSQ3) AddMCtrl(tick int, id string, value int) {

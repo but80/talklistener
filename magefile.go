@@ -7,15 +7,17 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
-	// "github.com/jessevdk/go-assets"
 	"github.com/jessevdk/go-assets"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"github.com/magefile/mage/target"
 	"golang.org/x/tools/imports"
 )
+
+var sep = string(filepath.Separator)
 
 func exists(filename string) bool {
 	_, err := os.Stat(filename)
@@ -45,7 +47,7 @@ func popDir() {
 	dirStack = dirStack[:n-1]
 }
 
-// Checkout submodules
+// サブモジュールのチェックアウト
 func Submodules() error {
 	if exists("cmodules/julius/configure") && exists("cmodules/world/makefile") {
 		return nil
@@ -59,14 +61,48 @@ func Submodules() error {
 	return nil
 }
 
+func matchesAll(file string, regex []string) bool {
+	code, err := ioutil.ReadFile(file)
+	if err != nil {
+		return false
+	}
+	for _, rx := range regex {
+		r, err := regexp.Compile(rx)
+		if err != nil || !r.Match(code) {
+			return false
+		}
+	}
+	return true
+}
+
+func replaceAll(file string, fromRegex []string, to []string) error {
+	code, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	for i, rx := range fromRegex {
+		if len(to) < i+1 {
+			continue
+		}
+		r, err := regexp.Compile(rx)
+		if err != nil {
+			return err
+		}
+		code = r.ReplaceAll(code, []byte(to[i]))
+	}
+	return ioutil.WriteFile(file, code, 0644)
+}
+
+// libjulius のビルド
 func buildJulius() error {
 	if exists("cmodules/julius/libjulius/libjulius.a") {
 		return nil
 	}
-	if err := pushDir("cmodules/julius"); err != nil {
+	if err := pushDir("cmodules/julius/libjulius"); err != nil {
 		return err
 	}
 	defer popDir()
+	_ = sh.RunV("make", "distclean")
 	if err := sh.RunV("./configure"); err != nil {
 		return err
 	}
@@ -76,7 +112,45 @@ func buildJulius() error {
 	return nil
 }
 
+// libsent のビルド
+func buildSent() error {
+	mg.SerialDeps(Submodules)
+	dir := filepath.FromSlash("cmodules/julius/libsent")
+	src := filepath.Join(dir, "include", "sent", "speech.h")
+	dst := filepath.Join(dir, "libsent.a")
+
+	// Juliusが処理可能な語長・音長の制約を拡大
+	from := []string{
+		`#define\s+MAXSEQNUM\s+\d+`,
+		`#define\s+MAXSPEECHLEN\s+\d+`,
+	}
+	to := []string{
+		"#define MAXSEQNUM     1500",
+		"#define MAXSPEECHLEN  3200000",
+	}
+
+	// TODO: dst, src の順序が逆
+	// workaround for https://github.com/magefile/mage/issues/122
+	if ok, _ := target.Path(src, dst); ok && matchesAll(src, to) {
+		return nil
+	}
+	if err := replaceAll(src, from, to); err != nil {
+		return err
+	}
+
+	// リビルド
+	if err := pushDir(dir); err != nil {
+		return err
+	}
+	defer popDir()
+	_ = sh.RunV("make", "distclean")
+	_ = sh.RunV("." + sep + "configure")
+	_ = sh.RunV("make")
+	return nil
+}
+
 func buildWorld() error {
+	mg.SerialDeps(Submodules)
 	if exists("cmodules/world/build/libworld.a") {
 		return nil
 	}
@@ -84,19 +158,16 @@ func buildWorld() error {
 		return err
 	}
 	defer popDir()
-	if err := sh.RunV("make"); err != nil {
-		return err
-	}
+	_ = sh.RunV("make")
 	return nil
 }
 
-// Build C modules
+// Cモジュールのビルド
 func Cmodules() error {
-	mg.SerialDeps(Submodules)
 	if err := buildJulius(); err != nil {
 		return err
 	}
-	if err := buildWorld(); err != nil {
+	if err := buildSent(); err != nil {
 		return err
 	}
 	return nil
@@ -105,19 +176,17 @@ func Cmodules() error {
 // Generate assets
 func Assets() error {
 	dst := "internal/assets/assets.go"
-	src := []string{
-		"cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm",
-	}
-	if ok, _ := target.Path(dst, src...); ok {
+	src := "cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm"
+	// TODO: dst, src の順序が逆
+	// workaround for https://github.com/magefile/mage/issues/122
+	if ok, _ := target.Path(src, dst); ok {
 		return nil
 	}
 
 	gen := assets.Generator{
 		PackageName: "assets",
 	}
-	for _, s := range src {
-		gen.Add(s)
-	}
+	gen.Add(src)
 	file, err := os.Create(dst)
 	if err != nil {
 		return err
@@ -129,7 +198,7 @@ func Assets() error {
 	return nil
 }
 
-// Build binary
+// バイナリのビルド
 func Build() error {
 	mg.SerialDeps(Cmodules)
 	if err := sh.RunV("go", "build", "."); err != nil {
@@ -138,7 +207,7 @@ func Build() error {
 	return nil
 }
 
-// Install binary
+// インストール
 func Install() error {
 	mg.SerialDeps(Cmodules)
 	if err := sh.RunV("go", "install", "."); err != nil {
@@ -147,13 +216,15 @@ func Install() error {
 	return nil
 }
 
-// Run program
+// デモの実行
 func Run() error {
-	mg.SerialDeps(Cmodules)
+	// mg.SerialDeps(Cmodules)
 	args := []string{
-		"run", "main.go", "generator.go", "f0.go", "fir.go",
+		"run", "main.go",
+		"-o", "output/test.vsqx",
+		"-l", "output/test.tlo",
 		// "-v",
-		"input/test.wav", "input/test.txt", "output/test.vsqx",
+		"input/test.wav",
 	}
 	if err := sh.RunV("go", args...); err != nil {
 		return err
@@ -161,7 +232,7 @@ func Run() error {
 	return nil
 }
 
-// Run test
+// テストの実行
 func Test() error {
 	mg.SerialDeps(Cmodules)
 	if err := sh.RunV("go", "test", "./..."); err != nil {
@@ -170,7 +241,7 @@ func Test() error {
 	return nil
 }
 
-// Check coding style
+// コーディングスタイルのチェック
 func Lint() error {
 	if err := sh.RunV("gometalinter", "--config=.gometalinter.json", "./..."); err != nil {
 		return err
@@ -178,7 +249,7 @@ func Lint() error {
 	return nil
 }
 
-// Format code
+// コードのフォーマット
 func Fmt() error {
 	return filepath.Walk(".", func(path string, info os.FileInfo, err error) error {
 		if err != nil {
