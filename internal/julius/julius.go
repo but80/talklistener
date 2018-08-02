@@ -34,6 +34,7 @@ import "C"
 import (
 	"fmt"
 	"strings"
+	"time"
 	"unsafe"
 
 	"github.com/but80/talklistener/internal/globalopt"
@@ -64,6 +65,7 @@ type Segment struct {
 type Result struct {
 	Dictation [][]string
 	Segments  []Segment
+	completed bool
 }
 
 func (result *Result) DictationString() string {
@@ -118,6 +120,9 @@ func run(argv []string, wavfile string) (*Result, error) {
 		}
 		return nil, fmt.Errorf("Julius: 音声認識に失敗しました")
 	}
+	for !result.completed {
+		time.Sleep(10 * time.Millisecond)
+	}
 
 	C.j_recog_free(recog)
 	return result, nil
@@ -125,10 +130,13 @@ func run(argv []string, wavfile string) (*Result, error) {
 
 //export onResult
 func onResult(recog *C.Recog, data unsafe.Pointer) {
+	result := (*Result)(data)
+	defer func() {
+		result.completed = true
+	}()
 	if recog == nil {
 		return
 	}
-	result := (*Result)(data)
 	proc := recog.process_list
 	for proc != nil {
 		result.update(proc)
