@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -229,27 +230,53 @@ func convertAudioFile(in, out string) error {
 	return nil
 }
 
-func Generate(wavfile, wordsfile, dictationKitName, tmpdir, outfile string) error {
+func exists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
+
+func isEmpty(filename string) bool {
+	s, err := os.Stat(filename)
+	return err != nil || s.Size() == 0
+}
+
+var removeExtRx = regexp.MustCompile(`\.[^\.]+$`)
+
+func removeExt(filename string) string {
+	return removeExtRx.ReplaceAllString(filename, "")
+}
+
+func Generate(wavfile, wordsfile, dictationModel, objdir, outfile string) error {
 	noteOffset := .0
+	if !exists(wavfile) {
+		return fmt.Errorf("%s が見つかりません", wavfile)
+	}
+	if wordsfile == "" {
+		wordsfile = removeExt(wavfile) + ".txt"
+	}
+	if outfile == "" {
+		outfile = removeExt(wavfile) + ".vsqx"
+	}
 
 	name := filepath.Base(wavfile)
-	if tmpdir == "" {
+	if objdir == "" {
 		var err error
-		if tmpdir, err = ioutil.TempDir("", name); err != nil {
+		if objdir, err = ioutil.TempDir("", name); err != nil {
 			return errors.Wrap(err, "一時ディレクトリの作成に失敗しました")
 		}
-	} else if _, err := os.Stat(tmpdir); err != nil {
-		if err := os.Mkdir(tmpdir, 0755); err != nil {
+	} else if _, err := os.Stat(objdir); err != nil {
+		if err := os.Mkdir(objdir, 0755); err != nil {
 			return errors.Wrap(err, "一時ディレクトリの作成に失敗しました")
 		}
 	}
-	tmpprefix := filepath.Join(tmpdir, name)
+	objPrefix := filepath.Join(objdir, name)
 
-	convertedWavFile := tmpprefix + ".wav"
+	convertedWavFile := objPrefix + ".wav"
 	if err := convertAudioFile(wavfile, convertedWavFile); err != nil {
 		return errors.Wrap(err, "音声ファイルの変換に失敗しました")
 	}
 
+	parallel := true
 	var wg sync.WaitGroup
 	errch := make(chan error, 9)
 
@@ -260,7 +287,7 @@ func Generate(wavfile, wordsfile, dictationKitName, tmpdir, outfile string) erro
 	go func() {
 		defer wg.Done()
 		var err error
-		notes, err = wavToF0Note(convertedWavFile, tmpprefix+".f0", f0FramePeriod)
+		notes, err = wavToF0Note(convertedWavFile, objPrefix+".f0", f0FramePeriod)
 		if err != nil {
 			errch <- errors.Wrap(err, "基本周波数の推定に失敗しました")
 			return
@@ -286,19 +313,32 @@ func Generate(wavfile, wordsfile, dictationKitName, tmpdir, outfile string) erro
 		}
 	}()
 
+	if !parallel {
+		wg.Wait()
+	}
+
 	wg.Add(1)
 	var result *julius.Result
 	go func() {
 		defer wg.Done()
 		var err error
-		if wordsfile == "" {
-			result, err = julius.Dictate(convertedWavFile, dictationKitName)
+		if isEmpty(wordsfile) {
+			result, err = julius.Dictate(convertedWavFile, dictationModel)
 			if err != nil {
 				errch <- errors.Wrap(err, "発話内容の推定に失敗しました")
 				return
 			}
+			b := []byte(result.DictationString())
+			if len(b) == 0 {
+				errch <- errors.Wrap(err, "音声ファイル中に認識可能な発話がありませんでした")
+				return
+			}
+			if err := ioutil.WriteFile(wordsfile, b, 0644); err != nil {
+				errch <- errors.Wrap(err, "推定した発話内容の保存に失敗しました")
+				return
+			}
 		} else {
-			result, err = julius.Segmentate(convertedWavFile, wordsfile, tmpprefix)
+			result, err = julius.Segmentate(convertedWavFile, wordsfile, objPrefix)
 			if err != nil {
 				errch <- errors.Wrap(err, "発音タイミングの推定に失敗しました")
 				return
@@ -364,15 +404,11 @@ func Generate(wavfile, wordsfile, dictationKitName, tmpdir, outfile string) erro
 		}
 	}
 
-	if err := ioutil.WriteFile(tmpprefix+".seg", []byte(segsData), 0644); err != nil {
+	if err := ioutil.WriteFile(objPrefix+".seg", []byte(segsData), 0644); err != nil {
 		return errors.Wrap(err, "一時ファイルの保存に失敗しました")
 	}
 
 	gen.feedPitchBends(notes)
-	if outfile == "" {
-		gen.dump()
-		return nil
-	}
 	if err := gen.save(outfile); err != nil {
 		return errors.Wrap(err, "VSQXの保存に失敗しました")
 	}

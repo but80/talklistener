@@ -404,14 +404,14 @@ func saveAssetAsFile(assetname, filename string) error {
 	return ioutil.WriteFile(filename, data, 0644)
 }
 
-func Segmentate(wavfile, wordsfile, tmpprefix string) (*Result, error) {
-	words, err := wordsToDict(wordsfile, tmpprefix+".dict")
+func Segmentate(wavfile, wordsfile, objPrefix string) (*Result, error) {
+	words, err := wordsToDict(wordsfile, objPrefix+".dict")
 	if err != nil {
 		return nil, err
 	}
-	generateDFA(len(words), tmpprefix+".dfa")
+	generateDFA(len(words), objPrefix+".dfa")
 
-	hmmTmpName := tmpprefix + ".binhmm"
+	hmmTmpName := objPrefix + ".binhmm"
 	if err := saveAssetAsFile(hmmDefs, hmmTmpName); err != nil {
 		return nil, err
 	}
@@ -419,8 +419,8 @@ func Segmentate(wavfile, wordsfile, tmpprefix string) (*Result, error) {
 	argv := []string{
 		"julius",
 		"-h", hmmTmpName, // HMM definition
-		"-dfa", tmpprefix + ".dfa", // DFA grammar
-		"-v", tmpprefix + ".dict", // dictionary
+		"-dfa", objPrefix + ".dfa", // DFA grammar
+		"-v", objPrefix + ".dict", // dictionary
 		"-palign", // optionally output phoneme alignments
 		"-input", "file",
 	}

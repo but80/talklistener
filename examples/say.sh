@@ -8,5 +8,5 @@ if ! ( which talklistener >/dev/null ); then
 fi
 
 say -v Kyoko -o say 'これはテストです' || exit $?
-echo 'これわてすとです' > say.txt
-talklistener say.aiff say.txt say.vsqx
+# echo 'これわてすとです' > say.txt
+talklistener say.aiff

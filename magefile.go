@@ -17,6 +17,8 @@ import (
 	"golang.org/x/tools/imports"
 )
 
+var sep = string(filepath.Separator)
+
 func exists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil
@@ -126,7 +128,10 @@ func buildSent() error {
 		"#define MAXSEQNUM     1500",
 		"#define MAXSPEECHLEN  3200000",
 	}
-	if ok, _ := target.Path(dst, src); ok && matchesAll(src, to) {
+
+	// TODO: dst, src の順序が逆
+	// workaround for https://github.com/magefile/mage/issues/122
+	if ok, _ := target.Path(src, dst); ok && matchesAll(src, to) {
 		return nil
 	}
 	if err := replaceAll(src, from, to); err != nil {
@@ -139,12 +144,8 @@ func buildSent() error {
 	}
 	defer popDir()
 	_ = sh.RunV("make", "distclean")
-	if err := sh.RunV(filepath.Join(".", "configure")); err != nil {
-		return err
-	}
-	if err := sh.RunV("make"); err != nil {
-		return err
-	}
+	_ = sh.RunV("." + sep + "configure")
+	_ = sh.RunV("make")
 	return nil
 }
 
@@ -157,34 +158,35 @@ func buildWorld() error {
 		return err
 	}
 	defer popDir()
-	if err := sh.RunV("make"); err != nil {
-		return err
-	}
+	_ = sh.RunV("make")
 	return nil
 }
 
 // Cモジュールのビルド
 func Cmodules() error {
-	mg.SerialDeps(buildJulius, buildSent)
+	if err := buildJulius(); err != nil {
+		return err
+	}
+	if err := buildSent(); err != nil {
+		return err
+	}
 	return nil
 }
 
 // Generate assets
 func Assets() error {
 	dst := "internal/assets/assets.go"
-	src := []string{
-		"cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm",
-	}
-	if ok, _ := target.Path(dst, src...); ok {
+	src := "cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm"
+	// TODO: dst, src の順序が逆
+	// workaround for https://github.com/magefile/mage/issues/122
+	if ok, _ := target.Path(src, dst); ok {
 		return nil
 	}
 
 	gen := assets.Generator{
 		PackageName: "assets",
 	}
-	for _, s := range src {
-		gen.Add(s)
-	}
+	gen.Add(src)
 	file, err := os.Create(dst)
 	if err != nil {
 		return err
@@ -216,12 +218,13 @@ func Install() error {
 
 // デモの実行
 func Run() error {
-	mg.SerialDeps(Cmodules)
+	// mg.SerialDeps(Cmodules)
 	args := []string{
 		"run", "main.go",
-		"-t", "output/test.tltmp",
+		"-o", "output/test.vsqx",
+		"-l", "output/test.tlo",
 		// "-v",
-		"input/test.wav", "input/test.txt", "output/test.vsqx",
+		"input/test.wav",
 	}
 	if err := sh.RunV("go", args...); err != nil {
 		return err

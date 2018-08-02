@@ -7,8 +7,27 @@ package julius
 
 void onResult(Recog *recog, void *data);
 
-static void _register_callback_result(Recog *recog, void *data) {
+static void _register_callback_result(Recog* recog, void* data) {
 	callback_add(recog, CALLBACK_RESULT, onResult, data);
+}
+
+static Sentence* _read_sentence_array(Sentence* p, int index) {
+	return p + index;
+}
+static float _read_float_array(float* p, int index) {
+	return p[index];
+}
+static int _read_int_array(int* p, int index) {
+	return p[index];
+}
+static unsigned char _read_uchar_array(unsigned char* p, int index) {
+	return p[index];
+}
+static HMM_Logical* _read_hmm_logical(HMM_Logical** p, int index) {
+	return p[index];
+}
+static HMM_Logical** _read_hmm_logical_ptr(HMM_Logical*** p, int index) {
+	return p[index];
 }
 */
 import "C"
@@ -19,6 +38,14 @@ import (
 
 	"github.com/but80/talklistener/internal/globalopt"
 )
+
+func cStringArray(a []string) []*C.char {
+	result := make([]*C.char, len(a))
+	for i, s := range a {
+		result[i] = C.CString(s)
+	}
+	return result
+}
 
 const (
 	framePeriod = 0.01
@@ -31,11 +58,20 @@ type Segment struct {
 	BeginTime  float64
 	EndTime    float64
 	Unit       string
+	Score      float64
 }
 
 type Result struct {
 	Dictation [][]string
 	Segments  []Segment
+}
+
+func (result *Result) DictationString() string {
+	s := ""
+	for _, dic := range result.Dictation {
+		s += strings.Join(dic, " ") + "\n"
+	}
+	return s
 }
 
 func run(argv []string, wavfile string) (*Result, error) {
@@ -88,9 +124,13 @@ func run(argv []string, wavfile string) (*Result, error) {
 
 //export onResult
 func onResult(recog *C.Recog, data unsafe.Pointer) {
+	if recog == nil {
+		return
+	}
+	result := (*Result)(data)
 	proc := recog.process_list
 	for proc != nil {
-		outputResult(proc, (*Result)(data))
+		result.update(proc)
 		proc = proc.next
 	}
 }
@@ -108,28 +148,41 @@ func centerName(s string) string {
 	return s
 }
 
-func outputResult(proc *C.RecogProcess, result *Result) {
-	if proc.live == 0 {
-		return
-	}
-	if proc.result.status < 0 {
-		fmt.Printf("no results obtained: %d\n", proc.result.status)
+func (result *Result) update(proc *C.RecogProcess) {
+	if proc == nil || proc.live == 0 || proc.result.status < 0 || proc.lm == nil {
 		return
 	}
 	winfo := proc.lm.winfo
+	if winfo == nil {
+		return
+	}
 	sentnum := int(proc.result.sentnum)
 	for i := 0; i < sentnum; i++ {
-		sent := readSentence(proc.result.sent, i)
-
+		if proc.result.sent == nil {
+			continue
+		}
+		sent := C._read_sentence_array(proc.result.sent, C.int(i))
+		if sent == nil {
+			continue
+		}
 		if unsafe.Pointer(&sent.word[0]) != nil {
 			seqnum := int(sent.word_num)
+			if len(sent.word) < seqnum {
+				seqnum = len(sent.word)
+			}
 			dictation := []string{}
 			for i := 0; i < seqnum; i++ {
 				w := int(sent.word[i])
-				wl := int(readCUCharArray(winfo.wlen, w))
+				wl := int(C._read_uchar_array(winfo.wlen, C.int(w)))
 				for j := 0; j < wl; j++ {
-					p := readHMMLogicalPtr(winfo.wseq, w)
-					ws := readHMMLogical(p, j)
+					p := C._read_hmm_logical_ptr(winfo.wseq, C.int(w))
+					if p == nil {
+						continue
+					}
+					ws := C._read_hmm_logical(p, C.int(j))
+					if ws == nil {
+						continue
+					}
 					unit := C.GoString(ws.name)
 					dictation = append(dictation, centerName(unit))
 				}
@@ -138,12 +191,13 @@ func outputResult(proc *C.RecogProcess, result *Result) {
 		}
 
 		for align := sent.align; align != nil; align = align.next {
-			for i := 0; i < int(align.num); i++ {
-				// align.avgscore[i]
+			segnum := int(align.num)
+			for i := 0; i < segnum; i++ {
+				score := float64(C._read_float_array(align.avgscore, C.int(i)))
 				if align.unittype == C.PER_PHONEME {
-					begin := int(readCIntArray(align.begin_frame, i))
-					end := int(readCIntArray(align.end_frame, i))
-					p := readHMMLogical(align.ph, i)
+					begin := int(C._read_int_array(align.begin_frame, C.int(i)))
+					end := int(C._read_int_array(align.end_frame, C.int(i)))
+					p := C._read_hmm_logical(align.ph, C.int(i))
 					unit := C.GoString(p.name)
 					// if p.is_pseudo != 0 {
 					//   fmt.Printf("{%s}", p.name)
@@ -158,6 +212,7 @@ func outputResult(proc *C.RecogProcess, result *Result) {
 						BeginTime:  float64(begin) * framePeriod,
 						EndTime:    float64(end+1)*framePeriod + offsetAlign,
 						Unit:       unit,
+						Score:      score,
 					}
 					if begin != 0 {
 						seg.BeginTime += offsetAlign
@@ -167,42 +222,4 @@ func outputResult(proc *C.RecogProcess, result *Result) {
 			}
 		}
 	}
-}
-
-func cStringArray(a []string) []*C.char {
-	result := make([]*C.char, len(a))
-	for i, s := range a {
-		result[i] = C.CString(s)
-	}
-	return result
-}
-
-func readHMMLogical(p **C.HMM_Logical, index int) *C.HMM_Logical {
-	size := unsafe.Sizeof(*p)
-	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
-	return *(**C.HMM_Logical)(ptr)
-}
-
-func readHMMLogicalPtr(p ***C.HMM_Logical, index int) **C.HMM_Logical {
-	size := unsafe.Sizeof(*p)
-	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
-	return *(***C.HMM_Logical)(ptr)
-}
-
-func readSentence(p *C.Sentence, index int) *C.Sentence {
-	size := unsafe.Sizeof(*p)
-	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
-	return (*C.Sentence)(ptr)
-}
-
-func readCIntArray(p *C.int, index int) C.int {
-	size := unsafe.Sizeof(*p)
-	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
-	return *(*C.int)(ptr)
-}
-
-func readCUCharArray(p *C.uchar, index int) C.uchar {
-	size := unsafe.Sizeof(*p)
-	ptr := unsafe.Pointer(uintptr(unsafe.Pointer(p)) + size*uintptr(index))
-	return *(*C.uchar)(ptr)
 }

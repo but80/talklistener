@@ -15,7 +15,7 @@ var version = "unknown"
 
 const description = `
    - <音声ファイル> は .wav .aiff .mp3 等のフォーマットに対応しています。
-	 詳細は afconvert のヘルプを afconvert -hf にてお読みください。
+     詳細は afconvert のヘルプを afconvert -hf にてお読みください。
    - イントネーションの抽出に「音声分析変換合成システム WORLD」
      https://github.com/mmorise/World を使用しています。
    - 発音タイミングの抽出に「大語彙連続音声認識エンジン Julius」
@@ -38,16 +38,28 @@ func main() {
 		},
 	}
 	app.HelpName = "talklistener"
-	app.UsageText = "talklistener [オプション...] <音声ファイル> [ <テキストファイル> [ <出力ファイル.vsqx> ] ]"
+	app.UsageText = "talklistener [オプション...] <音声ファイル>"
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "dictation-kit, d",
-			Usage: "ディクテーションに使用するキット (" + strings.Join(julius.DictationKitNames, ", ") + ")",
+			Name:  "out, o",
+			Usage: `生成結果を指定した名前で保存します（省略時は "音声ファイル名.vsqx"）`,
+		},
+		cli.StringFlag{
+			Name:  "text, t",
+			Usage: `テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）`,
+		},
+		cli.BoolFlag{
+			Name:  "redictate, r",
+			Usage: "発話内容の再認識を行い、その結果をテキストファイルに上書き保存します",
+		},
+		cli.StringFlag{
+			Name:  "dictation-model, d",
+			Usage: "発話内容の認識に使用するモデル (" + strings.Join(julius.DictationModelNames, ", ") + ")",
 			Value: "std-gmm",
 		},
 		cli.StringFlag{
-			Name:  "tmpdir, t",
-			Usage: "中間ファイルを削除せず、指定した名前のディレクトリに保存します",
+			Name:  "leave-obj, l",
+			Usage: "中間オブジェクトを削除せず、指定した名前のディレクトリに保存します",
 		},
 		cli.BoolFlag{
 			Name:  "verbose, v",
@@ -68,12 +80,11 @@ func main() {
 		if ctx.NArg() < 1 {
 			cli.ShowAppHelpAndExit(ctx, 1)
 		}
-		args := append(ctx.Args(), "", "")
-		wavfile := args[0]
-		txtfile := args[1]
-		outfile := args[2]
+		wavfile := ctx.Args()[0]
+		txtfile := ctx.String("text")
+		outfile := ctx.String("out")
 		globalopt.Verbose = ctx.Bool("verbose")
-		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-kit"), ctx.String("tmpdir"), outfile); err != nil {
+		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-model"), ctx.String("leave-obj"), outfile); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 		return nil
