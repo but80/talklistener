@@ -76,7 +76,7 @@ func (result *Result) DictationString() string {
 }
 
 func run(argv []string, wavfile string) (*Result, error) {
-	if globalopt.Verbose {
+	if globalopt.Debug {
 		C.j_enable_debug_message()
 	}
 	if !globalopt.Verbose {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/but80/talklistener/internal/assets"
@@ -93,6 +94,8 @@ func saveAssetAsFile(assetname, filename string) error {
 }
 
 func Segmentate(wavfile, wordsfile, objPrefix string) (*Result, error) {
+	log.Println("発音タイミングを推定中...")
+
 	words, err := wordsToDict(wordsfile, objPrefix+".dict")
 	if err != nil {
 		return nil, err

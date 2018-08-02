@@ -2,6 +2,7 @@ package julius
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -62,6 +63,8 @@ mkdir -p ~/.talklistener; cd ~/.talklistener; curl -vLo %s.%s '%s' && %s %s.%s
 `
 
 func Dictate(wavfile, model string) (*Result, error) {
+	log.Println("発話内容を推定中...")
+
 	u, err := user.Current()
 	if err != nil {
 		return nil, errors.Wrap(err, "ホームディレクトリを特定できません")

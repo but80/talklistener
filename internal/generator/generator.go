@@ -3,6 +3,7 @@ package generator
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math"
 	"os"
 	"os/exec"
@@ -158,6 +159,7 @@ func (gen *generator) dump() {
 }
 
 func convertAudioFile(in, out string) error {
+	log.Println("音声ファイルのフォーマットを変換中...")
 	cmd := exec.Command(
 		"/usr/bin/afconvert",
 		"-f", "WAVE",
@@ -222,7 +224,7 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 		return errors.Wrap(err, "音声ファイルの変換に失敗しました")
 	}
 
-	parallel := true
+	parallel := false
 	var wg sync.WaitGroup
 	errch := make(chan error, 9)
 
@@ -252,6 +254,7 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 		}
 		noteCenter = int(math.Round((noteMax + noteMin) / 2.0))
 
+		log.Println("基本周波数の変動をフィルタリング中...")
 		notes = resample(notes, resampleRate)
 		if 0 <= useLPF {
 			notes = convolve(notes, firLPF[useLPF])
@@ -303,6 +306,7 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 	}
 	gen.reset()
 
+	log.Println("VSQXを生成中...")
 	segsData := ""
 	for _, seg := range result.Segments {
 		segsData += fmt.Sprintf("%.7f %.7f %s\n", seg.BeginTime, seg.EndTime, seg.Unit)
@@ -361,5 +365,8 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 	if err := gen.save(outfile); err != nil {
 		return errors.Wrap(err, "VSQXの保存に失敗しました")
 	}
+
+	log.Printf("出力ノート数: %d\n", gen.vsqx.NoteCount())
+	log.Println("完了")
 	return nil
 }

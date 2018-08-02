@@ -2,12 +2,14 @@ package generator
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"reflect"
 
 	"github.com/but80/talklistener/internal/world"
 	"github.com/mjibson/go-dsp/wav"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -42,14 +44,16 @@ func loadWav(filename string) ([]float64, int, error) {
 }
 
 func wavToF0Note(infile, outfile string, framePeriod float64) ([]float64, error) {
+	log.Println("基本周波数を推定中...")
+
 	x, fs, err := loadWav(infile)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "音声ファイルの読み込みに失敗しました")
 	}
 
 	file, err := os.OpenFile(outfile, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "一時ファイルの作成に失敗しました")
 	}
 	defer file.Close()
 
@@ -58,7 +62,7 @@ func wavToF0Note(infile, outfile string, framePeriod float64) ([]float64, error)
 	for i, n := range n0 {
 		_, err := fmt.Fprintf(file, "%.7f: %.2f\n", float64(i)*framePeriod, n)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "一時ファイルの保存に失敗しました")
 		}
 	}
 	return n0, nil

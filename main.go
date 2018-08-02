@@ -66,7 +66,11 @@ func main() {
 			Usage: "詳細を表示します",
 		},
 		cli.BoolFlag{
-			Name:  "version, V",
+			Name:  "debug",
+			Usage: "デバッグ情報を表示します",
+		},
+		cli.BoolFlag{
+			Name:  "version",
 			Usage: "バージョン番号を表示します",
 		},
 	}
@@ -84,6 +88,7 @@ func main() {
 		txtfile := ctx.String("text")
 		outfile := ctx.String("out")
 		globalopt.Verbose = ctx.Bool("verbose")
+		globalopt.Debug = ctx.Bool("debug")
 		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-model"), outfile, ctx.Bool("redictate"), ctx.Bool("leave-obj")); err != nil {
 			return cli.NewExitError(err, 1)
 		}
