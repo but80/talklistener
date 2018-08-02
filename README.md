@@ -40,10 +40,11 @@ GLOBAL OPTIONS:
    --out value, -o value              生成結果を指定した名前で保存します（省略時は "音声ファイル名.vsqx"）
    --text value, -t value             テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）
    --redictate, -r                    発話内容の再認識を行い、その結果をテキストファイルに上書き保存します
-   --dictation-model value, -d value  発話内容の認識に使用するモデル (std-gmm, std-dnn, ssr-dnn) (default: "std-gmm")
-   --leave-obj value, -l value        中間オブジェクトを削除せず、指定した名前のディレクトリに保存します
+   --dictation-model value, -d value  発話内容の認識に使用するモデル (std-gmm, std-dnn, ssr-dnn) (default: "ssr-dnn")
+   --leave-obj, -l                    中間オブジェクトを削除せず、ディレクトリ "音声ファイル名.tlo/" に保存します
    --verbose, -v                      詳細を表示します
-   --version, -V                      バージョン番号を表示します
+   --debug                            デバッグ情報を表示します
+   --version                          バージョン番号を表示します
    --help, -h                         show help
 ```
 
@@ -96,9 +97,12 @@ GLOBAL OPTIONS:
 ## TODO
 
 - やりたい
-  - リンクへのDnDで変換
+  - トランスポーズ指定
+  - ピッチ変化に適用するLPFのカットオフ指定
+  - アプリケーションリンクへのDnDで変換
   - 無音部分のf0補間方法を改良
 - やるかも
+  - 抑揚を強調
   - 音量からDYNを生成
   - 非周期成分の比率からBREを生成
   - Windows対応
