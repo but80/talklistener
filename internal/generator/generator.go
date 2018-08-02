@@ -191,7 +191,7 @@ func removeExt(filename string) string {
 	return removeExtRx.ReplaceAllString(filename, "")
 }
 
-func Generate(wavfile, wordsfile, dictationModel, objdir, outfile string, redictate bool) error {
+func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, leaveObj bool) error {
 	noteOffset := .0
 	if !exists(wavfile) {
 		return fmt.Errorf("%s が見つかりません", wavfile)
@@ -204,7 +204,8 @@ func Generate(wavfile, wordsfile, dictationModel, objdir, outfile string, redict
 	}
 
 	name := filepath.Base(wavfile)
-	if objdir == "" {
+	objdir := removeExt(wavfile) + ".tlo"
+	if !leaveObj {
 		var err error
 		if objdir, err = ioutil.TempDir("", name); err != nil {
 			return errors.Wrap(err, "一時ディレクトリの作成に失敗しました")
@@ -347,6 +348,9 @@ func Generate(wavfile, wordsfile, dictationModel, objdir, outfile string, redict
 		if err := gen.flush(); err != nil {
 			return errors.Wrap(err, "発音テキストの内容が不正な可能性があります")
 		}
+	}
+	if err := gen.flush(); err != nil {
+		return errors.Wrap(err, "発音テキストの内容が不正な可能性があります")
 	}
 
 	if err := ioutil.WriteFile(objPrefix+".seg", []byte(segsData), 0644); err != nil {

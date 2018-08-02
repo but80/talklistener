@@ -57,9 +57,9 @@ func main() {
 			Usage: "発話内容の認識に使用するモデル (" + strings.Join(julius.DictationModelNames, ", ") + ")",
 			Value: "ssr-dnn",
 		},
-		cli.StringFlag{
+		cli.BoolFlag{
 			Name:  "leave-obj, l",
-			Usage: "中間オブジェクトを削除せず、指定した名前のディレクトリに保存します",
+			Usage: `中間オブジェクトを削除せず、ディレクトリ "音声ファイル名.tlo/" に保存します`,
 		},
 		cli.BoolFlag{
 			Name:  "verbose, v",
@@ -84,7 +84,7 @@ func main() {
 		txtfile := ctx.String("text")
 		outfile := ctx.String("out")
 		globalopt.Verbose = ctx.Bool("verbose")
-		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-model"), ctx.String("leave-obj"), outfile, ctx.Bool("redictate")); err != nil {
+		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-model"), outfile, ctx.Bool("redictate"), ctx.Bool("leave-obj")); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 		return nil
