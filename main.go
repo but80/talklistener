@@ -7,8 +7,11 @@ import (
 	"github.com/but80/talklistener/internal/generator"
 	"github.com/but80/talklistener/internal/globalopt"
 	"github.com/but80/talklistener/internal/julius"
-	_ "github.com/theckman/goconstraint/go1.10/gte"
+	"github.com/comail/colog"
 	"github.com/urfave/cli"
+
+	// Go >= 1.10 required
+	_ "github.com/theckman/goconstraint/go1.10/gte"
 )
 
 var version = "unknown"
@@ -40,22 +43,26 @@ func main() {
 	app.HelpName = "talklistener"
 	app.UsageText = "talklistener [オプション...] <音声ファイル>"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "out, o",
-			Usage: `生成結果を指定した名前で保存します（省略時は "音声ファイル名.vsqx"）`,
-		},
-		cli.StringFlag{
-			Name:  "text, t",
-			Usage: `テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）`,
+		cli.IntFlag{
+			Name:  "transpose, p",
+			Usage: `出力VSQX内の全ノートの音高をずらします（単位：セント）`,
 		},
 		cli.BoolFlag{
-			Name:  "redictate, r",
+			Name:  "redictate, R",
 			Usage: "発話内容の再認識を行い、その結果をテキストファイルに上書き保存します",
 		},
 		cli.StringFlag{
 			Name:  "dictation-model, d",
 			Usage: "発話内容の認識に使用するモデル (" + strings.Join(julius.DictationModelNames, ", ") + ")",
 			Value: "ssr-dnn",
+		},
+		cli.StringFlag{
+			Name:  "out, o",
+			Usage: `出力VSQXを指定した名前で保存します（省略時は "音声ファイル名.vsqx"）`,
+		},
+		cli.StringFlag{
+			Name:  "text, t",
+			Usage: `テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）`,
 		},
 		cli.BoolFlag{
 			Name:  "leave-obj, l",
@@ -89,11 +96,22 @@ func main() {
 		outfile := ctx.String("out")
 		globalopt.Verbose = ctx.Bool("verbose")
 		globalopt.Debug = ctx.Bool("debug")
-		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-model"), outfile, ctx.Bool("redictate"), ctx.Bool("leave-obj")); err != nil {
+		if globalopt.Debug {
+			colog.SetMinLevel(colog.LDebug)
+		} else if globalopt.Verbose {
+			colog.SetMinLevel(colog.LInfo)
+		} else {
+			colog.SetMinLevel(colog.LWarning)
+		}
+		if err := generator.Generate(
+			wavfile, txtfile, ctx.String("dictation-model"), outfile,
+			ctx.Bool("redictate"), ctx.Bool("leave-obj"), ctx.Int("transpose"),
+		); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 		return nil
 	}
 
+	colog.Register()
 	app.Run(os.Args)
 }

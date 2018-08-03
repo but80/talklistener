@@ -94,7 +94,7 @@ func saveAssetAsFile(assetname, filename string) error {
 }
 
 func Segmentate(wavfile, wordsfile, objPrefix string) (*Result, error) {
-	log.Println("発音タイミングを推定中...")
+	log.Print("info: 発音タイミングを推定中...")
 
 	words, err := wordsToDict(wordsfile, objPrefix+".dict")
 	if err != nil {

@@ -63,7 +63,7 @@ mkdir -p ~/.talklistener; cd ~/.talklistener; curl -vLo %s.%s '%s' && %s %s.%s
 `
 
 func Dictate(wavfile, model string) (*Result, error) {
-	log.Println("発話内容を推定中...")
+	log.Print("info: 発話内容を推定中...")
 
 	u, err := user.Current()
 	if err != nil {

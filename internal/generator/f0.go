@@ -44,7 +44,7 @@ func loadWav(filename string) ([]float64, int, error) {
 }
 
 func wavToF0Note(infile, outfile string, framePeriod float64) ([]float64, error) {
-	log.Println("基本周波数を推定中...")
+	log.Print("info: 基本周波数を推定中...")
 
 	x, fs, err := loadWav(infile)
 	if err != nil {

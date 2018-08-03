@@ -37,9 +37,10 @@ USAGE:
    talklistener [オプション...] <音声ファイル>
 
 GLOBAL OPTIONS:
-   --out value, -o value              生成結果を指定した名前で保存します（省略時は "音声ファイル名.vsqx"）
+   --transpose value, -p value        出力VSQX内の全ノートの音高をずらします（単位：セント） (default: 0)
+   --out value, -o value              出力VSQXを指定した名前で保存します（省略時は "音声ファイル名.vsqx"）
    --text value, -t value             テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）
-   --redictate, -r                    発話内容の再認識を行い、その結果をテキストファイルに上書き保存します
+   --redictate, -R                    発話内容の再認識を行い、その結果をテキストファイルに上書き保存します
    --dictation-model value, -d value  発話内容の認識に使用するモデル (std-gmm, std-dnn, ssr-dnn) (default: "ssr-dnn")
    --leave-obj, -l                    中間オブジェクトを削除せず、ディレクトリ "音声ファイル名.tlo/" に保存します
    --verbose, -v                      詳細を表示します
@@ -97,11 +98,11 @@ GLOBAL OPTIONS:
 ## TODO
 
 - やりたい
-  - トランスポーズ指定
   - ピッチ変化に適用するLPFのカットオフ指定
   - アプリケーションリンクへのDnDで変換
   - 無音部分のf0補間方法を改良
 - やるかも
+  - シンガー指定
   - 抑揚を強調
   - 音量からDYNを生成
   - 非周期成分の比率からBREを生成
