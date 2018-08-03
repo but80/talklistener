@@ -52,6 +52,11 @@ func main() {
 			Usage: "発話内容の再認識を行い、その結果をテキストファイルに上書き保存します",
 		},
 		cli.StringFlag{
+			Name:  "f0-cutoff, f",
+			Usage: "基本周波数の変動にかけるLPFのカットオフ周波数 (" + strings.Join(generator.FIRLPFCutoffs, ", ") + ")",
+			Value: "1.0",
+		},
+		cli.StringFlag{
 			Name:  "dictation-model, d",
 			Usage: "発話内容の認識に使用するモデル (" + strings.Join(julius.DictationModelNames, ", ") + ")",
 			Value: "ssr-dnn",
@@ -104,7 +109,7 @@ func main() {
 			colog.SetMinLevel(colog.LWarning)
 		}
 		if err := generator.Generate(
-			wavfile, txtfile, ctx.String("dictation-model"), outfile,
+			wavfile, txtfile, ctx.String("dictation-model"), outfile, ctx.String("f0-cutoff"),
 			ctx.Bool("redictate"), ctx.Bool("leave-obj"), ctx.Int("transpose"),
 		); err != nil {
 			return cli.NewExitError(err, 1)

@@ -38,10 +38,11 @@ USAGE:
 
 GLOBAL OPTIONS:
    --transpose value, -p value        出力VSQX内の全ノートの音高をずらします（単位：セント） (default: 0)
+   --redictate, -R                    発話内容の再認識を行い、その結果をテキストファイルに上書き保存します
+   --f0-cutoff value, -f value        基本周波数の変動にかけるLPFのカットオフ周波数 (0.5, 1.0, 1.5, 2.0, 2.5, 3.0) (default: "1.0")
+   --dictation-model value, -d value  発話内容の認識に使用するモデル (std-gmm, std-dnn, ssr-dnn) (default: "ssr-dnn")
    --out value, -o value              出力VSQXを指定した名前で保存します（省略時は "音声ファイル名.vsqx"）
    --text value, -t value             テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）
-   --redictate, -R                    発話内容の再認識を行い、その結果をテキストファイルに上書き保存します
-   --dictation-model value, -d value  発話内容の認識に使用するモデル (std-gmm, std-dnn, ssr-dnn) (default: "ssr-dnn")
    --leave-obj, -l                    中間オブジェクトを削除せず、ディレクトリ "音声ファイル名.tlo/" に保存します
    --verbose, -v                      詳細を表示します
    --debug                            デバッグ情報を表示します
@@ -98,7 +99,6 @@ GLOBAL OPTIONS:
 ## TODO
 
 - やりたい
-  - ピッチ変化に適用するLPFのカットオフ指定
   - アプリケーションリンクへのDnDで変換
   - 無音部分のf0補間方法を改良
 - やるかも

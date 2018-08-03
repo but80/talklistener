@@ -25,7 +25,6 @@ const (
 	bpm              = 125.00
 	tickTime         = 60.0 / bpm / float64(resolution) // = 0.001
 	splitConsonant   = true
-	useLPF           = 1
 )
 
 func timeToTick(time float64) int {
@@ -193,7 +192,7 @@ func removeExt(filename string) string {
 	return removeExtRx.ReplaceAllString(filename, "")
 }
 
-func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, leaveObj bool, transpose int) error {
+func Generate(wavfile, wordsfile, dictationModel, outfile, useLPF string, redictate, leaveObj bool, transpose int) error {
 	if !exists(wavfile) {
 		return fmt.Errorf("%s が見つかりません", wavfile)
 	}
@@ -256,7 +255,7 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 
 		log.Print("info: 基本周波数の変動をフィルタリング中...")
 		notes = resample(notes, resampleRate)
-		if 0 <= useLPF {
+		if useLPF != "" {
 			notes = convolve(notes, firLPF[useLPF])
 			notesDelay = float64(len(firLPF[useLPF])) / 2.0 * notesFramePeriod
 		}
