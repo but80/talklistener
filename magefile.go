@@ -222,8 +222,7 @@ func Run() error {
 	args := []string{
 		"run", "main.go",
 		"-o", "output/test.vsqx",
-		"-l", "output/test.tlo",
-		// "-v",
+		"-l", "-v",
 		"input/test.wav",
 	}
 	if err := sh.RunV("go", args...); err != nil {

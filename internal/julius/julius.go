@@ -5,9 +5,14 @@ package julius
 #cgo CFLAGS: -I../../cmodules/julius/libjulius/include -I../../cmodules/julius/libsent/include
 #include "julius/juliuslib.h"
 
+void onPass1Frame(Recog *recog, void *data);
+void onSegmentBegin(Recog *recog, void *data);
+void onSegmentEnd(Recog *recog, void *data);
 void onResult(Recog *recog, void *data);
-
-static void _register_callback_result(Recog* recog, void* data) {
+static void _register_callbacks(Recog* recog, void* data) {
+	callback_add(recog, CALLBACK_EVENT_PASS1_FRAME, onPass1Frame, data);
+	callback_add(recog, CALLBACK_EVENT_SEGMENT_BEGIN, onSegmentBegin, data);
+	callback_add(recog, CALLBACK_EVENT_SEGMENT_END, onSegmentEnd, data);
 	callback_add(recog, CALLBACK_RESULT, onResult, data);
 }
 
@@ -33,6 +38,7 @@ static HMM_Logical** _read_hmm_logical_ptr(HMM_Logical*** p, int index) {
 import "C"
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 	"unsafe"
@@ -65,8 +71,12 @@ type Segment struct {
 type Result struct {
 	Dictation [][]string
 	Segments  []Segment
+	frame     int
+	totalSec  float64
 	completed bool
 }
+
+var OnProgress func(float64, float64)
 
 func (result *Result) DictationString() string {
 	s := ""
@@ -99,7 +109,7 @@ func run(argv []string, wavfile string) (*Result, error) {
 	}
 
 	result := &Result{}
-	C._register_callback_result(recog, unsafe.Pointer(result))
+	C._register_callbacks(recog, unsafe.Pointer(result))
 
 	if C.j_adin_init(recog) == 0 {
 		return nil, fmt.Errorf("Julius: 音声認識ストリームの初期化に失敗しました")
@@ -126,6 +136,24 @@ func run(argv []string, wavfile string) (*Result, error) {
 
 	C.j_recog_free(recog)
 	return result, nil
+}
+
+//export onPass1Frame
+func onPass1Frame(recog *C.Recog, data unsafe.Pointer) {
+	result := (*Result)(data)
+	samples := int(recog.speechlen)
+	rate := int(recog.jconf.input.sfreq)
+	totalSec := float64(samples) / float64(rate)
+	OnProgress(float64(result.frame)*framePeriod, totalSec)
+	result.frame++
+}
+
+//export onSegmentBegin
+func onSegmentBegin(recog *C.Recog, data unsafe.Pointer) {
+}
+
+//export onSegmentEnd
+func onSegmentEnd(recog *C.Recog, data unsafe.Pointer) {
 }
 
 //export onResult
@@ -170,6 +198,11 @@ func (result *Result) update(proc *C.RecogProcess) {
 		if proc.result.sent == nil {
 			continue
 		}
+		log.Printf(
+			"debug: num_frame=%d length_msec=%d",
+			int(proc.result.num_frame),   ///< Number of frames of the recognized part
+			int(proc.result.length_msec), ///< Length of the recognized part
+		)
 		sent := C._read_sentence_array(proc.result.sent, C.int(i))
 		if sent == nil {
 			continue
@@ -220,7 +253,7 @@ func (result *Result) update(proc *C.RecogProcess) {
 						EndFrame:   end,
 						BeginTime:  float64(begin) * framePeriod,
 						EndTime:    float64(end+1)*framePeriod + offsetAlign,
-						Unit:       unit,
+						Unit:       centerName(unit),
 						Score:      score,
 					}
 					if begin != 0 {

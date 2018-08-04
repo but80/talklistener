@@ -1,11 +1,15 @@
 package generator
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"os"
 	"reflect"
+	"regexp"
+	"strconv"
 
 	"github.com/but80/talklistener/internal/world"
 	"github.com/mjibson/go-dsp/wav"
@@ -23,6 +27,7 @@ func loadWav(filename string) ([]float64, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
+	defer file.Close()
 	w, err := wav.New(file)
 	if err != nil {
 		return nil, 0, err
@@ -44,7 +49,7 @@ func loadWav(filename string) ([]float64, int, error) {
 }
 
 func wavToF0Note(infile, outfile string, framePeriod float64) ([]float64, error) {
-	log.Println("基本周波数を推定中...")
+	log.Print("info: 基本周波数を推定中...")
 
 	x, fs, err := loadWav(infile)
 	if err != nil {
@@ -53,7 +58,7 @@ func wavToF0Note(infile, outfile string, framePeriod float64) ([]float64, error)
 
 	file, err := os.OpenFile(outfile, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
-		return nil, errors.Wrap(err, "一時ファイルの作成に失敗しました")
+		return nil, errors.Wrap(err, "基本周波数キャッシュファイルの作成に失敗しました")
 	}
 	defer file.Close()
 
@@ -62,10 +67,43 @@ func wavToF0Note(infile, outfile string, framePeriod float64) ([]float64, error)
 	for i, n := range n0 {
 		_, err := fmt.Fprintf(file, "%.7f: %.2f\n", float64(i)*framePeriod, n)
 		if err != nil {
-			return nil, errors.Wrap(err, "一時ファイルの保存に失敗しました")
+			return nil, errors.Wrap(err, "基本周波数キャッシュファイルの保存に失敗しました")
 		}
 	}
 	return n0, nil
+}
+
+var loadF0NoteRx = regexp.MustCompile(`^\s*([\w\.\-]+)\W+([\w\.\-]+)`)
+
+func loadF0Note(infile string) ([]float64, error) {
+	file, err := os.Open(infile)
+	if err != nil {
+		return nil, errors.Wrap(err, "基本周波数キャッシュファイルの読み込みに失敗しました")
+	}
+	result := []float64{}
+	r := bufio.NewReader(file)
+	for {
+		line, _, err := r.ReadLine()
+		m := loadF0NoteRx.FindSubmatch(line)
+		if m != nil {
+			t, err := strconv.ParseFloat(string(m[1]), 64)
+			if err != nil {
+				continue
+			}
+			f, err := strconv.ParseFloat(string(m[2]), 64)
+			if err != nil {
+				continue
+			}
+			_ = t // TODO: tの差分がframePeriodに一致するかを確認
+			result = append(result, f)
+		}
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, errors.Wrap(err, "基本周波数のキャッシュファイルの読み込みに失敗しました")
+		}
+	}
+	return result, nil
 }
 
 func interpolate(f0 []float64) []float64 {

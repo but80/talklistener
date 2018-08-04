@@ -7,8 +7,11 @@ import (
 	"github.com/but80/talklistener/internal/generator"
 	"github.com/but80/talklistener/internal/globalopt"
 	"github.com/but80/talklistener/internal/julius"
-	_ "github.com/theckman/goconstraint/go1.10/gte"
+	"github.com/comail/colog"
 	"github.com/urfave/cli"
+
+	// Go >= 1.10 required
+	_ "github.com/theckman/goconstraint/go1.10/gte"
 )
 
 var version = "unknown"
@@ -29,7 +32,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "talklistener"
 	app.Version = version
-	app.Usage = "話し声を録音したwavファイルと、その読みを記述したテキストの組み合わせから、Vocaloid3シーケンスを生成します"
+	app.Usage = "話し声を録音したwavファイルからVocaloid3シーケンスを生成します"
 	app.Description = strings.TrimSpace(description)
 	app.Authors = []cli.Author{
 		{
@@ -40,26 +43,39 @@ func main() {
 	app.HelpName = "talklistener"
 	app.UsageText = "talklistener [オプション...] <音声ファイル>"
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "out, o",
-			Usage: `生成結果を指定した名前で保存します（省略時は "音声ファイル名.vsqx"）`,
-		},
-		cli.StringFlag{
-			Name:  "text, t",
-			Usage: `テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）`,
+		cli.IntFlag{
+			Name:  "transpose, p",
+			Usage: `出力VSQX内の全ノートの音高をずらします（単位：セント）`,
 		},
 		cli.BoolFlag{
-			Name:  "redictate, r",
+			Name:  "redictate, R",
 			Usage: "発話内容の再認識を行い、その結果をテキストファイルに上書き保存します",
+		},
+		cli.StringFlag{
+			Name:  "f0-cutoff, f",
+			Usage: "基本周波数の変動にかけるLPFのカットオフ周波数 (" + strings.Join(generator.FIRLPFCutoffs, ", ") + ")",
+			Value: "1.0",
 		},
 		cli.StringFlag{
 			Name:  "dictation-model, d",
 			Usage: "発話内容の認識に使用するモデル (" + strings.Join(julius.DictationModelNames, ", ") + ")",
 			Value: "ssr-dnn",
 		},
+		cli.StringFlag{
+			Name:  "out, o",
+			Usage: `出力VSQXを指定した名前で保存します（省略時は "音声ファイル名.vsqx"）`,
+		},
+		cli.StringFlag{
+			Name:  "text, t",
+			Usage: `テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）`,
+		},
 		cli.BoolFlag{
-			Name:  "leave-obj, l",
-			Usage: `中間オブジェクトを削除せず、ディレクトリ "音声ファイル名.tlo/" に保存します`,
+			Name:  "recache, r",
+			Usage: `キャッシュ "音声ファイル名.tlo/" を再作成します`,
+		},
+		cli.BoolFlag{
+			Name:  "silent, s",
+			Usage: "進捗情報等の表示を抑制します",
 		},
 		cli.BoolFlag{
 			Name:  "verbose, v",
@@ -89,11 +105,29 @@ func main() {
 		outfile := ctx.String("out")
 		globalopt.Verbose = ctx.Bool("verbose")
 		globalopt.Debug = ctx.Bool("debug")
-		if err := generator.Generate(wavfile, txtfile, ctx.String("dictation-model"), outfile, ctx.Bool("redictate"), ctx.Bool("leave-obj")); err != nil {
+		globalopt.Silent = ctx.Bool("silent")
+		if globalopt.Debug || globalopt.Verbose {
+			colog.SetMinLevel(colog.LDebug)
+		} else if globalopt.Silent {
+			colog.SetMinLevel(colog.LWarning)
+		} else {
+			colog.SetMinLevel(colog.LInfo)
+		}
+		if err := generator.Generate(&generator.GenerateOptions{
+			AudioFile:      wavfile,
+			TextFile:       txtfile,
+			OutFile:        outfile,
+			F0LPFCutoff:    ctx.String("f0-cutoff"),
+			DictationModel: ctx.String("dictation-model"),
+			Transpose:      ctx.Int("transpose"),
+			Redictate:      ctx.Bool("redictate"),
+			Recache:        ctx.Bool("recache"),
+		}); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 		return nil
 	}
 
+	colog.Register()
 	app.Run(os.Args)
 }

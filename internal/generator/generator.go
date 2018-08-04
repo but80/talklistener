@@ -25,7 +25,7 @@ const (
 	bpm              = 125.00
 	tickTime         = 60.0 / bpm / float64(resolution) // = 0.001
 	splitConsonant   = true
-	useLPF           = 1
+	parallel         = true
 )
 
 func timeToTick(time float64) int {
@@ -159,7 +159,7 @@ func (gen *generator) dump() {
 }
 
 func convertAudioFile(in, out string) error {
-	log.Println("音声ファイルのフォーマットを変換中...")
+	log.Print("info: 音声ファイルのフォーマットを変換中...")
 	cmd := exec.Command(
 		"/usr/bin/afconvert",
 		"-f", "WAVE",
@@ -182,6 +182,18 @@ func exists(filename string) bool {
 	return err == nil
 }
 
+func isNewer(this, that string) bool {
+	sThis, err := os.Stat(this)
+	if err != nil {
+		return false
+	}
+	sThat, err := os.Stat(that)
+	if err != nil {
+		return false
+	}
+	return sThis.ModTime().After(sThat.ModTime())
+}
+
 func isEmpty(filename string) bool {
 	s, err := os.Stat(filename)
 	return err != nil || s.Size() == 0
@@ -193,38 +205,52 @@ func removeExt(filename string) string {
 	return removeExtRx.ReplaceAllString(filename, "")
 }
 
-func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, leaveObj bool) error {
-	noteOffset := .0
-	if !exists(wavfile) {
-		return fmt.Errorf("%s が見つかりません", wavfile)
+type GenerateOptions struct {
+	AudioFile      string
+	TextFile       string
+	OutFile        string
+	F0LPFCutoff    string
+	DictationModel string
+	Transpose      int
+	Redictate      bool
+	Recache        bool
+}
+
+// Generate は、話し声を録音した音声ファイルからVocaloid3シーケンスを生成します。
+func Generate(opts *GenerateOptions) error {
+	if !exists(opts.AudioFile) {
+		return fmt.Errorf("%s が見つかりません", opts.AudioFile)
 	}
-	if wordsfile == "" {
-		wordsfile = removeExt(wavfile) + ".txt"
+	if opts.TextFile == "" {
+		opts.TextFile = removeExt(opts.AudioFile) + ".txt"
 	}
-	if outfile == "" {
-		outfile = removeExt(wavfile) + ".vsqx"
+	if opts.OutFile == "" {
+		opts.OutFile = removeExt(opts.AudioFile) + ".vsqx"
 	}
 
-	name := filepath.Base(wavfile)
-	objdir := removeExt(wavfile) + ".tlo"
-	if !leaveObj {
-		var err error
-		if objdir, err = ioutil.TempDir("", name); err != nil {
-			return errors.Wrap(err, "一時ディレクトリの作成に失敗しました")
+	name := filepath.Base(opts.AudioFile)
+	objdir := removeExt(opts.AudioFile) + ".tlo"
+	if opts.Recache {
+		if err := os.RemoveAll(objdir); err != nil {
+			return errors.Wrap(err, "キャッシュディレクトリの作成に失敗しました")
 		}
-	} else if _, err := os.Stat(objdir); err != nil {
+	}
+	if _, err := os.Stat(objdir); err != nil {
 		if err := os.Mkdir(objdir, 0755); err != nil {
-			return errors.Wrap(err, "一時ディレクトリの作成に失敗しました")
+			return errors.Wrap(err, "キャッシュディレクトリの作成に失敗しました")
 		}
 	}
 	objPrefix := filepath.Join(objdir, name)
 
 	convertedWavFile := objPrefix + ".wav"
-	if err := convertAudioFile(wavfile, convertedWavFile); err != nil {
-		return errors.Wrap(err, "音声ファイルの変換に失敗しました")
+	if isNewer(convertedWavFile, opts.AudioFile) {
+		log.Printf("info: フォーマット変換済み音声ファイルのキャッシュを使用します: %s", convertedWavFile)
+	} else {
+		if err := convertAudioFile(opts.AudioFile, convertedWavFile); err != nil {
+			return errors.Wrap(err, "音声ファイルの変換に失敗しました")
+		}
 	}
 
-	parallel := false
 	var wg sync.WaitGroup
 	errch := make(chan error, 9)
 
@@ -232,16 +258,27 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 	noteCenter := int(a3Note)
 	notesDelay := .0
 	notes := []float64{}
+	f0done := false
 	go func() {
 		defer wg.Done()
+		defer func() {
+			f0done = true
+		}()
 		var err error
-		notes, err = wavToF0Note(convertedWavFile, objPrefix+".f0", f0FramePeriod)
+		f0file := objPrefix + ".f0"
+		if isNewer(f0file, convertedWavFile) {
+			log.Printf("info: 推定済み基本周波数のキャッシュを使用します: %s", f0file)
+			notes, err = loadF0Note(f0file)
+		} else {
+			notes, err = wavToF0Note(convertedWavFile, f0file, f0FramePeriod)
+		}
 		if err != nil {
 			errch <- errors.Wrap(err, "基本周波数の推定に失敗しました")
 			return
 		}
 		noteMin := 128.0
 		noteMax := .0
+		noteOffset := float64(opts.Transpose) / 100.0
 		for i := range notes {
 			notes[i] += noteOffset
 			note := notes[i]
@@ -254,11 +291,11 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 		}
 		noteCenter = int(math.Round((noteMax + noteMin) / 2.0))
 
-		log.Println("基本周波数の変動をフィルタリング中...")
+		log.Print("info: 基本周波数の変動をフィルタリング中...")
 		notes = resample(notes, resampleRate)
-		if 0 <= useLPF {
-			notes = convolve(notes, firLPF[useLPF])
-			notesDelay = float64(len(firLPF[useLPF])) / 2.0 * notesFramePeriod
+		if opts.F0LPFCutoff != "" {
+			notes = convolve(notes, firLPF[opts.F0LPFCutoff])
+			notesDelay = float64(len(firLPF[opts.F0LPFCutoff])) / 2.0 * notesFramePeriod
 		}
 	}()
 
@@ -270,9 +307,17 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 	var result *julius.Result
 	go func() {
 		defer wg.Done()
+		lastSec := -1
+		julius.OnProgress = func(progress, total float64) {
+			sec := int(progress/10.0) * 10
+			if lastSec != sec {
+				log.Printf("info: 進捗: %d / %d 秒", sec, int(math.Ceil(total)))
+				lastSec = sec
+			}
+		}
 		var err error
-		if isEmpty(wordsfile) || redictate {
-			result, err = julius.Dictate(convertedWavFile, dictationModel)
+		if isEmpty(opts.TextFile) || opts.Redictate {
+			result, err = julius.Dictate(convertedWavFile, opts.DictationModel)
 			if err != nil {
 				errch <- errors.Wrap(err, "発話内容の推定に失敗しました")
 				return
@@ -282,16 +327,18 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 				errch <- errors.Wrap(err, "音声ファイル中に認識可能な発話がありませんでした")
 				return
 			}
-			if err := ioutil.WriteFile(wordsfile, b, 0644); err != nil {
+			if err := ioutil.WriteFile(opts.TextFile, b, 0644); err != nil {
 				errch <- errors.Wrap(err, "推定した発話内容の保存に失敗しました")
 				return
 			}
-		} else {
-			result, err = julius.Segmentate(convertedWavFile, wordsfile, objPrefix)
-			if err != nil {
-				errch <- errors.Wrap(err, "発音タイミングの推定に失敗しました")
-				return
-			}
+		}
+		result, err = julius.Segmentate(convertedWavFile, opts.TextFile, objPrefix)
+		if err != nil {
+			errch <- errors.Wrap(err, "発音タイミングの推定に失敗しました")
+			return
+		}
+		if !f0done {
+			log.Printf("info: 基本周波数の推定が継続中です。しばらくお待ち下さい...")
 		}
 	}()
 
@@ -306,7 +353,7 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 	}
 	gen.reset()
 
-	log.Println("VSQXを生成中...")
+	log.Print("info: VSQXを生成中...")
 	segsData := ""
 	for _, seg := range result.Segments {
 		segsData += fmt.Sprintf("%.7f %.7f %s\n", seg.BeginTime, seg.EndTime, seg.Unit)
@@ -345,28 +392,28 @@ func Generate(wavfile, wordsfile, dictationModel, outfile string, redictate, lea
 
 		if splitConsonant {
 			if err := gen.flush(); err != nil {
-				return errors.Wrap(err, "発音テキストの内容が不正な可能性があります")
+				return errors.Wrap(err, "テキストファイルの内容が不正です")
 			}
 		}
 		gen.setVowel(beginTime, endTime, unit)
 		if err := gen.flush(); err != nil {
-			return errors.Wrap(err, "発音テキストの内容が不正な可能性があります")
+			return errors.Wrap(err, "テキストファイルの内容が不正です")
 		}
 	}
 	if err := gen.flush(); err != nil {
-		return errors.Wrap(err, "発音テキストの内容が不正な可能性があります")
+		return errors.Wrap(err, "テキストファイルの内容が不正です")
 	}
 
 	if err := ioutil.WriteFile(objPrefix+".seg", []byte(segsData), 0644); err != nil {
-		return errors.Wrap(err, "一時ファイルの保存に失敗しました")
+		return errors.Wrap(err, "セグメンテーションキャッシュファイルの保存に失敗しました")
 	}
 
 	gen.feedPitchBends(notes)
-	if err := gen.save(outfile); err != nil {
+	if err := gen.save(opts.OutFile); err != nil {
 		return errors.Wrap(err, "VSQXの保存に失敗しました")
 	}
 
-	log.Printf("出力ノート数: %d\n", gen.vsqx.NoteCount())
-	log.Println("完了")
+	log.Printf("info: 出力ノート数: %d", gen.vsqx.NoteCount())
+	log.Print("info: 完了")
 	return nil
 }
