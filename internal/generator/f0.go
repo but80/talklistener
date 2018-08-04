@@ -1,11 +1,15 @@
 package generator
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"os"
 	"reflect"
+	"regexp"
+	"strconv"
 
 	"github.com/but80/talklistener/internal/world"
 	"github.com/mjibson/go-dsp/wav"
@@ -23,6 +27,7 @@ func loadWav(filename string) ([]float64, int, error) {
 	if err != nil {
 		return nil, 0, err
 	}
+	defer file.Close()
 	w, err := wav.New(file)
 	if err != nil {
 		return nil, 0, err
@@ -66,6 +71,39 @@ func wavToF0Note(infile, outfile string, framePeriod float64) ([]float64, error)
 		}
 	}
 	return n0, nil
+}
+
+var loadF0NoteRx = regexp.MustCompile(`^\s*([\w\.\-]+)\W+([\w\.\-]+)`)
+
+func loadF0Note(infile string) ([]float64, error) {
+	file, err := os.Open(infile)
+	if err != nil {
+		return nil, errors.Wrap(err, "基本周波数のキャッシュファイルの読み込みに失敗しました")
+	}
+	result := []float64{}
+	r := bufio.NewReader(file)
+	for {
+		line, _, err := r.ReadLine()
+		m := loadF0NoteRx.FindSubmatch(line)
+		if m != nil {
+			t, err := strconv.ParseFloat(string(m[1]), 64)
+			if err != nil {
+				continue
+			}
+			f, err := strconv.ParseFloat(string(m[2]), 64)
+			if err != nil {
+				continue
+			}
+			_ = t // TODO: tの差分がframePeriodに一致するかを確認
+			result = append(result, f)
+		}
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return nil, errors.Wrap(err, "基本周波数のキャッシュファイルの読み込みに失敗しました")
+		}
+	}
+	return result, nil
 }
 
 func interpolate(f0 []float64) []float64 {

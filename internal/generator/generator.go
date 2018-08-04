@@ -181,6 +181,18 @@ func exists(filename string) bool {
 	return err == nil
 }
 
+func isNewer(this, that string) bool {
+	sThis, err := os.Stat(this)
+	if err != nil {
+		return false
+	}
+	sThat, err := os.Stat(that)
+	if err != nil {
+		return false
+	}
+	return sThis.ModTime().After(sThat.ModTime())
+}
+
 func isEmpty(filename string) bool {
 	s, err := os.Stat(filename)
 	return err != nil || s.Size() == 0
@@ -218,8 +230,12 @@ func Generate(wavfile, wordsfile, dictationModel, outfile, useLPF string, redict
 	objPrefix := filepath.Join(objdir, name)
 
 	convertedWavFile := objPrefix + ".wav"
-	if err := convertAudioFile(wavfile, convertedWavFile); err != nil {
-		return errors.Wrap(err, "音声ファイルの変換に失敗しました")
+	if isNewer(convertedWavFile, wavfile) {
+		log.Printf("info: フォーマット変換済み音声ファイルのキャッシュを使用します: %s", convertedWavFile)
+	} else {
+		if err := convertAudioFile(wavfile, convertedWavFile); err != nil {
+			return errors.Wrap(err, "音声ファイルの変換に失敗しました")
+		}
 	}
 
 	parallel := false
@@ -233,7 +249,13 @@ func Generate(wavfile, wordsfile, dictationModel, outfile, useLPF string, redict
 	go func() {
 		defer wg.Done()
 		var err error
-		notes, err = wavToF0Note(convertedWavFile, objPrefix+".f0", f0FramePeriod)
+		f0file := objPrefix + ".f0"
+		if isNewer(f0file, convertedWavFile) {
+			log.Printf("info: 推定済み基本周波数のキャッシュを使用します: %s", f0file)
+			notes, err = loadF0Note(f0file)
+		} else {
+			notes, err = wavToF0Note(convertedWavFile, f0file, f0FramePeriod)
+		}
 		if err != nil {
 			errch <- errors.Wrap(err, "基本周波数の推定に失敗しました")
 			return
@@ -269,6 +291,14 @@ func Generate(wavfile, wordsfile, dictationModel, outfile, useLPF string, redict
 	var result *julius.Result
 	go func() {
 		defer wg.Done()
+		lastSec := -1
+		julius.OnProgress = func(progress, total float64) {
+			sec := int(progress/10.0) * 10
+			if lastSec != sec {
+				log.Printf("info: 進捗: %d / %.1f 秒", sec, total)
+				lastSec = sec
+			}
+		}
 		var err error
 		if isEmpty(wordsfile) || redictate {
 			result, err = julius.Dictate(convertedWavFile, dictationModel)
@@ -285,12 +315,11 @@ func Generate(wavfile, wordsfile, dictationModel, outfile, useLPF string, redict
 				errch <- errors.Wrap(err, "推定した発話内容の保存に失敗しました")
 				return
 			}
-		} else {
-			result, err = julius.Segmentate(convertedWavFile, wordsfile, objPrefix)
-			if err != nil {
-				errch <- errors.Wrap(err, "発音タイミングの推定に失敗しました")
-				return
-			}
+		}
+		result, err = julius.Segmentate(convertedWavFile, wordsfile, objPrefix)
+		if err != nil {
+			errch <- errors.Wrap(err, "発音タイミングの推定に失敗しました")
+			return
 		}
 	}()
 

@@ -44,6 +44,7 @@ GLOBAL OPTIONS:
    --out value, -o value              出力VSQXを指定した名前で保存します（省略時は "音声ファイル名.vsqx"）
    --text value, -t value             テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）
    --leave-obj, -l                    中間オブジェクトを削除せず、ディレクトリ "音声ファイル名.tlo/" に保存します
+   --silent, -s                       進捗情報等の表示を抑制します
    --verbose, -v                      詳細を表示します
    --debug                            デバッグ情報を表示します
    --version                          バージョン番号を表示します

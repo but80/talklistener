@@ -74,6 +74,10 @@ func main() {
 			Usage: `中間オブジェクトを削除せず、ディレクトリ "音声ファイル名.tlo/" に保存します`,
 		},
 		cli.BoolFlag{
+			Name:  "silent, s",
+			Usage: "進捗情報等の表示を抑制します",
+		},
+		cli.BoolFlag{
 			Name:  "verbose, v",
 			Usage: "詳細を表示します",
 		},
@@ -101,12 +105,13 @@ func main() {
 		outfile := ctx.String("out")
 		globalopt.Verbose = ctx.Bool("verbose")
 		globalopt.Debug = ctx.Bool("debug")
-		if globalopt.Debug {
+		globalopt.Silent = ctx.Bool("silent")
+		if globalopt.Debug || globalopt.Verbose {
 			colog.SetMinLevel(colog.LDebug)
-		} else if globalopt.Verbose {
-			colog.SetMinLevel(colog.LInfo)
-		} else {
+		} else if globalopt.Silent {
 			colog.SetMinLevel(colog.LWarning)
+		} else {
+			colog.SetMinLevel(colog.LInfo)
 		}
 		if err := generator.Generate(
 			wavfile, txtfile, ctx.String("dictation-model"), outfile, ctx.String("f0-cutoff"),
