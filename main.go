@@ -32,7 +32,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "talklistener"
 	app.Version = version
-	app.Usage = "話し声を録音したwavファイルと、その読みを記述したテキストの組み合わせから、Vocaloid3シーケンスを生成します"
+	app.Usage = "話し声を録音したwavファイルからVocaloid3シーケンスを生成します"
 	app.Description = strings.TrimSpace(description)
 	app.Authors = []cli.Author{
 		{
@@ -70,8 +70,8 @@ func main() {
 			Usage: `テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）`,
 		},
 		cli.BoolFlag{
-			Name:  "leave-obj, l",
-			Usage: `中間オブジェクトを削除せず、ディレクトリ "音声ファイル名.tlo/" に保存します`,
+			Name:  "recache, r",
+			Usage: `キャッシュ "音声ファイル名.tlo/" を再作成します`,
 		},
 		cli.BoolFlag{
 			Name:  "silent, s",
@@ -113,10 +113,16 @@ func main() {
 		} else {
 			colog.SetMinLevel(colog.LInfo)
 		}
-		if err := generator.Generate(
-			wavfile, txtfile, ctx.String("dictation-model"), outfile, ctx.String("f0-cutoff"),
-			ctx.Bool("redictate"), ctx.Bool("leave-obj"), ctx.Int("transpose"),
-		); err != nil {
+		if err := generator.Generate(&generator.GenerateOptions{
+			AudioFile:      wavfile,
+			TextFile:       txtfile,
+			OutFile:        outfile,
+			F0LPFCutoff:    ctx.String("f0-cutoff"),
+			DictationModel: ctx.String("dictation-model"),
+			Transpose:      ctx.Int("transpose"),
+			Redictate:      ctx.Bool("redictate"),
+			Recache:        ctx.Bool("recache"),
+		}); err != nil {
 			return cli.NewExitError(err, 1)
 		}
 		return nil

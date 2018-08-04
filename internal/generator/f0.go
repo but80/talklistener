@@ -58,7 +58,7 @@ func wavToF0Note(infile, outfile string, framePeriod float64) ([]float64, error)
 
 	file, err := os.OpenFile(outfile, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
-		return nil, errors.Wrap(err, "一時ファイルの作成に失敗しました")
+		return nil, errors.Wrap(err, "基本周波数キャッシュファイルの作成に失敗しました")
 	}
 	defer file.Close()
 
@@ -67,7 +67,7 @@ func wavToF0Note(infile, outfile string, framePeriod float64) ([]float64, error)
 	for i, n := range n0 {
 		_, err := fmt.Fprintf(file, "%.7f: %.2f\n", float64(i)*framePeriod, n)
 		if err != nil {
-			return nil, errors.Wrap(err, "一時ファイルの保存に失敗しました")
+			return nil, errors.Wrap(err, "基本周波数キャッシュファイルの保存に失敗しました")
 		}
 	}
 	return n0, nil
@@ -78,7 +78,7 @@ var loadF0NoteRx = regexp.MustCompile(`^\s*([\w\.\-]+)\W+([\w\.\-]+)`)
 func loadF0Note(infile string) ([]float64, error) {
 	file, err := os.Open(infile)
 	if err != nil {
-		return nil, errors.Wrap(err, "基本周波数のキャッシュファイルの読み込みに失敗しました")
+		return nil, errors.Wrap(err, "基本周波数キャッシュファイルの読み込みに失敗しました")
 	}
 	result := []float64{}
 	r := bufio.NewReader(file)
