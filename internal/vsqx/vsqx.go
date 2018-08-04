@@ -236,7 +236,15 @@ func New(resolution int, bpm float64) *VSQ3 {
 	return &vsq3
 }
 
+var singerToCompID = map[string]string{
+	"RIN_V4X_Power_EVEC": "BKKP765AEHXWSKDB",
+	"LEN_V4X_Power_EVEC": "BKPLC6S7LH3RZKC8",
+	"Yukari_Lin":         "BKLM76B8EHWSSKBB",
+}
+
 func (vsq3 *VSQ3) normalize() {
+	singer := "LEN_V4X_Power_EVEC"
+
 	if vsq3.XMLNS == "" {
 		vsq3.XMLNS = "http://www.yamaha.co.jp/vocaloid/schema/vsq3/"
 	}
@@ -253,10 +261,10 @@ func (vsq3 *VSQ3) normalize() {
 		vsq3.Version.Data = "3.0.0.11"
 	}
 	if vsq3.VoiceTable.Voice.CompID.Data == "" {
-		vsq3.VoiceTable.Voice.CompID.Data = "BKLM76B8EHWSSKBB" // "BKKP765AEHXWSKDB" // ?
+		vsq3.VoiceTable.Voice.CompID.Data = singerToCompID[singer]
 	}
 	if vsq3.VoiceTable.Voice.VoiceName.Data == "" {
-		vsq3.VoiceTable.Voice.VoiceName.Data = "Yukari_Lin" // "RIN_V4X_Power_EVEC" // "MIKU_V3_Original"
+		vsq3.VoiceTable.Voice.VoiceName.Data = singer
 	}
 	if vsq3.MasterTrack.SeqName.Data == "" {
 		vsq3.MasterTrack.SeqName.Data = "none"
@@ -339,6 +347,7 @@ func (vsq3 *VSQ3) AddNote(velocity, beginTick, endTick, note int, lyrics, phnms 
 			phnms = "4 a"
 		}
 	}
+	vsq3.LimitLastNote(beginTick)
 	vsq3.VSTrack.MusicalPart.Note = append(vsq3.VSTrack.MusicalPart.Note, Note{
 		PosTick:  beginTick,
 		DurTick:  endTick - beginTick,
@@ -359,6 +368,34 @@ func (vsq3 *VSQ3) AddNote(velocity, beginTick, endTick, note int, lyrics, phnms 
 		},
 	})
 	vsq3.noteCount++
+}
+
+func (vsq3 *VSQ3) ExtendLastNote(toTick, ifAfterTick int) bool {
+	part := vsq3.VSTrack.MusicalPart
+	n := len(part.Note)
+	if n < 1 {
+		return false
+	}
+	tail := part.Note[n-1].PosTick + part.Note[n-1].DurTick
+	if tail < ifAfterTick {
+		return false
+	}
+	part.Note[n-1].DurTick = toTick - part.Note[n-1].PosTick
+	return true
+}
+
+func (vsq3 *VSQ3) LimitLastNote(toTick int) bool {
+	part := vsq3.VSTrack.MusicalPart
+	n := len(part.Note)
+	if n < 1 {
+		return false
+	}
+	l := toTick - part.Note[n-1].PosTick
+	if part.Note[n-1].DurTick < l {
+		return false
+	}
+	part.Note[n-1].DurTick = l
+	return true
 }
 
 func (vsq3 *VSQ3) NoteCount() int {

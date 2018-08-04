@@ -25,6 +25,10 @@ const (
 	bpm              = 125.00
 	tickTime         = 60.0 / bpm / float64(resolution) // = 0.001
 	parallel         = true
+	extendNoteTime   = 0.05
+	shiftBendTime    = 0.0
+	durationAtMinVel = 0.20
+	durationAtMaxVel = 0.00
 )
 
 func timeToTick(time float64) int {
@@ -32,7 +36,7 @@ func timeToTick(time float64) int {
 }
 
 func durationToVelocity(dur float64) int {
-	velocity := 64 - int(math.Round(dur*.0)) // TODO: 子音の長さをベロシティに反映
+	velocity := 127 - int(math.Round((dur-durationAtMaxVel)*127.0/(durationAtMinVel-durationAtMaxVel)))
 	if velocity < 1 {
 		velocity = 1
 	} else if 127 < velocity {
@@ -98,7 +102,7 @@ func (gen *generator) flush() error {
 			gen.vsqx.AddNote(
 				64,
 				timeToTick(gen.vowelBeginTime),
-				timeToTick(gen.vowelEndTime),
+				timeToTick(gen.vowelEndTime+extendNoteTime),
 				gen.noteCenter,
 				julius.Consonants[""].Kana[vowelIndex],
 				"",
@@ -110,19 +114,20 @@ func (gen *generator) flush() error {
 			gen.vsqx.AddNote(
 				durationToVelocity(gen.consonantEndTime-gen.consonantBeginTime),
 				timeToTick(gen.consonantBeginTime),
-				timeToTick(gen.consonantEndTime),
+				timeToTick(gen.consonantEndTime+extendNoteTime),
 				gen.noteCenter,
 				gen.consonant,
 				cons.VSQXPhoneme,
 			)
 		} else {
 			// 子音＋母音
-			begin := gen.vowelBeginTime
-			// begin := (gen.consonantBeginTime+gen.vowelBeginTime)/2.0
+			begin := timeToTick(gen.vowelBeginTime)
+			end := timeToTick(gen.vowelEndTime + extendNoteTime)
+			gen.vsqx.ExtendLastNote(begin, timeToTick(gen.consonantBeginTime))
 			gen.vsqx.AddNote(
 				durationToVelocity(gen.vowelBeginTime-gen.consonantBeginTime),
-				timeToTick(begin),
-				timeToTick(gen.vowelEndTime),
+				begin,
+				end,
 				gen.noteCenter,
 				cons.Kana[vowelIndex],
 				"",
@@ -133,10 +138,10 @@ func (gen *generator) flush() error {
 	return nil
 }
 
-func (gen *generator) feedPitchBends(notes []float64) {
+func (gen *generator) feedPitchBends(notes []float64, timeOffset float64) {
 	bendSense := 24
 	gen.vsqx.AddMCtrl(.0, "PBS", bendSense)
-	t := .0
+	t := timeOffset
 	for _, note := range notes {
 		tick := int(math.Round(t / tickTime))
 		dNote := note - float64(gen.noteCenter)
@@ -368,6 +373,19 @@ func Generate(opts *GenerateOptions) error {
 		beginTime := seg.BeginTime + notesDelay
 		endTime := seg.EndTime + notesDelay
 
+		if unit == "q" {
+			gen.flush()
+			gen.vsqx.AddNote(
+				64,
+				timeToTick(beginTime),
+				timeToTick(endTime),
+				gen.noteCenter,
+				"っ",
+				"Sil",
+			)
+			continue
+		}
+
 		if s, ok := julius.SpecialsForVSQX[unit]; ok {
 			gen.flush()
 			if s != "" {
@@ -410,7 +428,7 @@ func Generate(opts *GenerateOptions) error {
 		return errors.Wrap(err, "セグメンテーションキャッシュファイルの保存に失敗しました")
 	}
 
-	gen.feedPitchBends(notes)
+	gen.feedPitchBends(notes, shiftBendTime)
 	if err := gen.save(opts.OutFile); err != nil {
 		return errors.Wrap(err, "VSQXの保存に失敗しました")
 	}

@@ -44,7 +44,7 @@ func main() {
 	app.UsageText = "talklistener [オプション...] <音声ファイル>"
 	app.Flags = []cli.Flag{
 		cli.IntFlag{
-			Name:  "transpose, p",
+			Name:  "transpose, t",
 			Usage: `出力VSQX内の全ノートの音高をずらします（単位：セント）`,
 		},
 		cli.BoolFlag{
@@ -66,11 +66,11 @@ func main() {
 			Value: "ssr-dnn",
 		},
 		cli.StringFlag{
-			Name:  "out, o",
+			Name:  "out",
 			Usage: `出力VSQXを指定した名前で保存します（省略時は "音声ファイル名.vsqx"）`,
 		},
 		cli.StringFlag{
-			Name:  "text, t",
+			Name:  "text",
 			Usage: `テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）`,
 		},
 		cli.BoolFlag{
