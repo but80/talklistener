@@ -48,6 +48,10 @@ func main() {
 			Usage: `出力VSQX内の全ノートの音高をずらします（単位：セント）`,
 		},
 		cli.BoolFlag{
+			Name:  "split-consonant, c",
+			Usage: `子音を母音とは別のノートに分割配置します`,
+		},
+		cli.BoolFlag{
 			Name:  "redictate, R",
 			Usage: "発話内容の再認識を行い、その結果をテキストファイルに上書き保存します",
 		},
@@ -119,6 +123,7 @@ func main() {
 			OutFile:        outfile,
 			F0LPFCutoff:    ctx.String("f0-cutoff"),
 			DictationModel: ctx.String("dictation-model"),
+			SplitConsonant: ctx.Bool("split-consonant"),
 			Transpose:      ctx.Int("transpose"),
 			Redictate:      ctx.Bool("redictate"),
 			Recache:        ctx.Bool("recache"),

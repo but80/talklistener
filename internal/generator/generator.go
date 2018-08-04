@@ -24,7 +24,6 @@ const (
 	resolution       = 480
 	bpm              = 125.00
 	tickTime         = 60.0 / bpm / float64(resolution) // = 0.001
-	splitConsonant   = true
 	parallel         = true
 )
 
@@ -118,9 +117,11 @@ func (gen *generator) flush() error {
 			)
 		} else {
 			// 子音＋母音
+			begin := gen.vowelBeginTime
+			// begin := (gen.consonantBeginTime+gen.vowelBeginTime)/2.0
 			gen.vsqx.AddNote(
 				durationToVelocity(gen.vowelBeginTime-gen.consonantBeginTime),
-				timeToTick((gen.consonantBeginTime+gen.vowelBeginTime)/2.0),
+				timeToTick(begin),
 				timeToTick(gen.vowelEndTime),
 				gen.noteCenter,
 				cons.Kana[vowelIndex],
@@ -211,6 +212,7 @@ type GenerateOptions struct {
 	OutFile        string
 	F0LPFCutoff    string
 	DictationModel string
+	SplitConsonant bool
 	Transpose      int
 	Redictate      bool
 	Recache        bool
@@ -390,7 +392,7 @@ func Generate(opts *GenerateOptions) error {
 			continue
 		}
 
-		if splitConsonant {
+		if opts.SplitConsonant {
 			if err := gen.flush(); err != nil {
 				return errors.Wrap(err, "テキストファイルの内容が不正です")
 			}

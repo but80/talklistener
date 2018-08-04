@@ -10,6 +10,12 @@
 
 ## インストール手順
 
+### 手作業でのインストール
+
+1. [リリースページ](https://github.com/but80/talklistener/releases) から `talklistener_X.X.X_darwin_amd64.tar.gz` をダウンロード
+2. アーカイブを展開
+3. 展開されたディレクトリに含まれる `talklistener` を任意の場所に移動
+
 ### macOS + Homebrew でのインストール
 
 ```bash
@@ -38,6 +44,7 @@ USAGE:
 
 GLOBAL OPTIONS:
    --transpose value, -p value        出力VSQX内の全ノートの音高をずらします（単位：セント） (default: 0)
+   --split-consonant, -c              子音を母音とは別のノートに分割配置します
    --redictate, -R                    発話内容の再認識を行い、その結果をテキストファイルに上書き保存します
    --f0-cutoff value, -f value        基本周波数の変動にかけるLPFのカットオフ周波数 (0.5, 1.0, 1.5, 2.0, 2.5, 3.0) (default: "1.0")
    --dictation-model value, -d value  発話内容の認識に使用するモデル (std-gmm, std-dnn, ssr-dnn) (default: "ssr-dnn")
@@ -102,6 +109,7 @@ GLOBAL OPTIONS:
 ## TODO
 
 - やりたい
+  - ディクテーションキットの自動ダウンロード
   - アプリケーションリンクへのDnDで変換
   - 無音部分のf0補間方法を改良
 - やるかも
