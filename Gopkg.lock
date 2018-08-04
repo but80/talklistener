@@ -3,6 +3,12 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/comail/colog"
+  packages = ["."]
+  revision = "fba8e7b1f46c3607f09760ce3880066e7ff57c5a"
+
+[[projects]]
+  branch = "master"
   name = "github.com/jessevdk/go-assets"
   packages = ["."]
   revision = "4f4301a06e153ff90e17793577ab6bf79f8dc5c5"
@@ -29,6 +35,12 @@
   revision = "11479a337f1259210b7c8f93f7bf2b0cc87b066e"
 
 [[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   name = "github.com/theckman/goconstraint"
   packages = ["go1.10/gte"]
   revision = "ab0c35bec1a7a2f1c05a4d5a16ef8e5798d14c0a"
@@ -53,6 +65,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4fd04e275b302570dabc6b873c71b2c207ab8e8825905a541dc50fba4065e55e"
+  inputs-digest = "7aa9b663b785e1a9f00e8075d8c1d15942f614737ef97f16c79f4a9baa54721d"
   solver-name = "gps-cdcl"
   solver-version = 1
