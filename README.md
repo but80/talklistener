@@ -39,19 +39,47 @@ Julius, WORLD が依存しているライブラリが必要になりますので
 ## 使用方法
 
 ```
+NAME:
+   talklistener - 話し声を録音したwavファイルからVocaloid3シーケンスを生成します
+
 USAGE:
    talklistener [オプション...] <音声ファイル>
 
+DESCRIPTION:
+   - <音声ファイル> は .wav .aiff .mp3 等のフォーマットに対応しています。
+     詳細は afconvert のヘルプを afconvert -hf にてお読みください。
+   - イントネーションの抽出に「音声分析変換合成システム WORLD」
+     https://github.com/mmorise/World を使用しています。
+   - 発音タイミングの抽出に「大語彙連続音声認識エンジン Julius」
+     https://github.com/julius-speech/julius
+     および、以下の関連データを使用しています。
+     - 音素セグメンテーションキット https://github.com/julius-speech/segmentation-kit
+     - ディクテーションキット https://github.com/julius-speech/dictation-kit
+
+   シンガー一覧:
+     CUL, IA, Iroha(V2), KAITO_V3_Soft, KAITO_V3_Straight, KAITO_V3_Whisper,
+     LEN_V4X_Cold, LEN_V4X_Power_EVEC, LEN_V4X_Serious, Len_ACT2(V2),
+     Luka_JPN(V2), Miku(V2), RIN_V4X_Power_EVEC, RIN_V4X_Sweet, RIN_V4X_Warm,
+     Rin_ACT2(V2), VY1V3, VY2V3, VY2V3_falsetto, Yukari, Yukari_Jun,
+     Yukari_Lin, Yukari_Onn
+
+AUTHOR:
+   but80 <mersenne.sister@gmail.com>
+
+COMMANDS:
+     help, h  Shows a list of commands or help for one command
+
 GLOBAL OPTIONS:
-   --transpose value, -p value        出力VSQX内の全ノートの音高をずらします（単位：セント） (default: 0)
+   --singer value, -s value           シンガー (default: "Yukari_Onn")
+   --transpose value, -t value        出力VSQX内の全ノートの音高をずらします（単位：セント） (default: 0)
    --split-consonant, -c              子音を母音とは別のノートに分割配置します
    --redictate, -R                    発話内容の再認識を行い、その結果をテキストファイルに上書き保存します
    --f0-cutoff value, -f value        基本周波数の変動にかけるLPFのカットオフ周波数 (0.5, 1.0, 1.5, 2.0, 2.5, 3.0) (default: "1.0")
    --dictation-model value, -d value  発話内容の認識に使用するモデル (std-gmm, std-dnn, ssr-dnn) (default: "ssr-dnn")
-   --out value, -o value              出力VSQXを指定した名前で保存します（省略時は "音声ファイル名.vsqx"）
-   --text value, -t value             テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）
+   --out value                        出力VSQXを指定した名前で保存します（省略時は "音声ファイル名.vsqx"）
+   --text value                       テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）
    --recache, -r                      キャッシュ "音声ファイル名.tlo/" を再作成します
-   --silent, -s                       進捗情報等の表示を抑制します
+   --quiet, -q                        進捗情報等の表示を抑制します
    --verbose, -v                      詳細を表示します
    --debug                            デバッグ情報を表示します
    --version                          バージョン番号を表示します
@@ -113,7 +141,6 @@ GLOBAL OPTIONS:
   - アプリケーションリンクへのDnDで変換
   - 無音部分のf0補間方法を改良
 - やるかも
-  - シンガー指定
   - 抑揚を強調
   - 音量からDYNを生成
   - 非周期成分の比率からBREを生成

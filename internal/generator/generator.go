@@ -215,6 +215,7 @@ type GenerateOptions struct {
 	AudioFile      string
 	TextFile       string
 	OutFile        string
+	Singer         string
 	F0LPFCutoff    string
 	DictationModel string
 	SplitConsonant bool
@@ -225,6 +226,11 @@ type GenerateOptions struct {
 
 // Generate は、話し声を録音した音声ファイルからVocaloid3シーケンスを生成します。
 func Generate(opts *GenerateOptions) error {
+	if !vsqx.IsValidSinger(opts.Singer) {
+		log.Printf("warn: シンガー %s は定義されていません", opts.Singer)
+		opts.Singer = vsqx.DefaultSinger
+	}
+
 	if !exists(opts.AudioFile) {
 		return fmt.Errorf("%s が見つかりません", opts.AudioFile)
 	}
@@ -356,7 +362,7 @@ func Generate(opts *GenerateOptions) error {
 
 	gen := generator{
 		noteCenter: noteCenter,
-		vsqx:       vsqx.New(resolution, bpm),
+		vsqx:       vsqx.New(opts.Singer, resolution, bpm),
 	}
 	gen.reset()
 

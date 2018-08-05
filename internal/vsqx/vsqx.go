@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"io/ioutil"
 	"math"
+	"sort"
 )
 
 // https://github.com/KentoW/json2vsqx を参考にさせていただきました。
@@ -204,13 +205,13 @@ func Load(filename string) (*VSQ3, error) {
 	if err := xml.Unmarshal(x, &result); err != nil {
 		return nil, err
 	}
-	result.normalize()
+	result.normalize("")
 	return &result, nil
 }
 
-func New(resolution int, bpm float64) *VSQ3 {
+func New(singer string, resolution int, bpm float64) *VSQ3 {
 	var vsq3 VSQ3
-	vsq3.normalize()
+	vsq3.normalize(singer)
 	vsq3.Mixer.VSUnit.SendLevel = -898
 	vsq3.Mixer.VSUnit.Pan = 64
 	vsq3.Mixer.SEUnit.SendLevel = -898
@@ -236,15 +237,72 @@ func New(resolution int, bpm float64) *VSQ3 {
 	return &vsq3
 }
 
-var singerToCompID = map[string]string{
-	"RIN_V4X_Power_EVEC": "BKKP765AEHXWSKDB",
-	"LEN_V4X_Power_EVEC": "BKPLC6S7LH3RZKC8",
-	"Yukari_Lin":         "BKLM76B8EHWSSKBB",
+type singerDef struct {
+	compID string
+	bs     int
 }
 
-func (vsq3 *VSQ3) normalize() {
-	singer := "LEN_V4X_Power_EVEC"
+var DefaultSinger = "Yukari_Onn"
 
+// Pull Request募集中
+var singerDefs = map[string]singerDef{
+	"CUL":                {compID: "BCBG86S4FSYMTCBK", bs: 0},
+	"DEX":                {compID: "BEPP62G3DDXLRECA", bs: 1},
+	"IA":                 {compID: "BLRGDDR4M3WM2LC6", bs: 0},
+	"Iroha(V2)":          {compID: "BMKN7HT9EWTTSMCL", bs: 0},
+	"KAITO_V3_English":   {compID: "BNGW7FG7E5TRSNC3", bs: 1},
+	"KAITO_V3_Soft":      {compID: "BKGKCC96L2TPZKAC", bs: 0},
+	"KAITO_V3_Straight":  {compID: "BDPEA722HT3KXDC4", bs: 0},
+	"KAITO_V3_Whisper":   {compID: "BDHEB7W2KTWKYDC5", bs: 0},
+	"LEN_V4X_Cold":       {compID: "BMGD88HZFLTHTMC7", bs: 0},
+	"LEN_V4X_Power_EVEC": {compID: "BKPLC6S7LH3RZKC8", bs: 0},
+	"LEN_V4X_Serious":    {compID: "BKFFF663PHSL4KB6", bs: 0},
+	"LEN_V4_English":     {compID: "BMFX98L8GLSSWMD3", bs: 1},
+	"Len_ACT2(V2)":       {compID: "BMLBDHXXMWYF2MBE", bs: 0},
+	"Luka_ENG(V2)":       {compID: "BHLNEE62NRYK3HD2", bs: 1},
+	"Luka_JPN(V2)":       {compID: "BCMDC9MZLKZHZCB4", bs: 0},
+	"Miku(V2)":           {compID: "BHHN4EF9BRWTNHAB", bs: 0},
+	"RIN_V4X_Power_EVEC": {compID: "BKKP765AEHXWSKDB", bs: 0},
+	"RIN_V4X_Sweet":      {compID: "BLECA76YHKRGXLB7", bs: 0},
+	"RIN_V4X_Warm":       {compID: "BDHEBZG2KCWKYDC5", bs: 0},
+	"RIN_V4_English":     {compID: "BXENFF42PWRK4XE7", bs: 1},
+	"Rin_ACT2(V2)":       {compID: "BEKF6B63DMXLRECA", bs: 0},
+	"VY1V3":              {compID: "BDRE87E2FTTKTDBA", bs: 0},
+	"VY2V3":              {compID: "BCXDC6CZLSZHZCB4", bs: 0},
+	"VY2V3_falsetto":     {compID: "BDSEB7L2KTWKYDC5", bs: 0},
+	"Yukari":             {compID: "BMGK9EC6G4RPWMB3", bs: 0},
+	"Yukari_Jun":         {compID: "BDKCEZEYNCTG3DBF", bs: 0},
+	"Yukari_Lin":         {compID: "BKLM76B8EHWSSKBB", bs: 0},
+	"Yukari_Onn":         {compID: "BNRCB9XYKM2GYNCE", bs: 0},
+}
+
+func Singers() []string {
+	result := []string{}
+	for s, d := range singerDefs {
+		if d.bs != 0 {
+			// TODO: 英語DB対応
+			continue
+		}
+		result = append(result, s)
+	}
+	sort.Strings(result)
+	return result
+}
+
+func IsValidSinger(singer string) bool {
+	d, ok := singerDefs[singer]
+	if !ok {
+		return false
+	}
+	// TODO: 英語DB対応
+	return d.bs == 0
+}
+
+func (vsq3 *VSQ3) isEnglish() bool {
+	return vsq3.VoiceTable.Voice.BS == 1
+}
+
+func (vsq3 *VSQ3) normalize(singer string) {
 	if vsq3.XMLNS == "" {
 		vsq3.XMLNS = "http://www.yamaha.co.jp/vocaloid/schema/vsq3/"
 	}
@@ -260,10 +318,9 @@ func (vsq3 *VSQ3) normalize() {
 	if vsq3.Version.Data == "" {
 		vsq3.Version.Data = "3.0.0.11"
 	}
-	if vsq3.VoiceTable.Voice.CompID.Data == "" {
-		vsq3.VoiceTable.Voice.CompID.Data = singerToCompID[singer]
-	}
-	if vsq3.VoiceTable.Voice.VoiceName.Data == "" {
+	if _, ok := singerDefs[singer]; ok {
+		vsq3.VoiceTable.Voice.BS = singerDefs[singer].bs
+		vsq3.VoiceTable.Voice.CompID.Data = singerDefs[singer].compID
 		vsq3.VoiceTable.Voice.VoiceName.Data = singer
 	}
 	if vsq3.MasterTrack.SeqName.Data == "" {

@@ -1,0 +1,883 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<vsq3 xmlns="http://www.yamaha.co.jp/vocaloid/schema/vsq3/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.yamaha.co.jp/vocaloid/schema/vsq3/ vsq3.xsd">
+	<vender><![CDATA[Yamaha corporation]]></vender>
+	<version><![CDATA[3.0.0.11]]></version>
+	<vVoiceTable>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>0</vPC>
+			<compID><![CDATA[BLECA76YHKRGXLB7]]></compID>
+			<vVoiceName><![CDATA[RIN_V4X_Sweet]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>1</vPC>
+			<compID><![CDATA[BDKCEZEYNCTG3DBF]]></compID>
+			<vVoiceName><![CDATA[Yukari_Jun]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>2</vPC>
+			<compID><![CDATA[BDSEB7L2KTWKYDC5]]></compID>
+			<vVoiceName><![CDATA[VY2V3_falsetto]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>3</vPC>
+			<compID><![CDATA[BKLM76B8EHWSSKBB]]></compID>
+			<vVoiceName><![CDATA[Yukari_Lin]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>4</vPC>
+			<compID><![CDATA[BKKP765AEHXWSKDB]]></compID>
+			<vVoiceName><![CDATA[RIN_V4X_Power_EVEC]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>5</vPC>
+			<compID><![CDATA[BKFFF663PHSL4KB6]]></compID>
+			<vVoiceName><![CDATA[LEN_V4X_Serious]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>6</vPC>
+			<compID><![CDATA[BDPEA722HT3KXDC4]]></compID>
+			<vVoiceName><![CDATA[KAITO_V3_Straight]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>7</vPC>
+			<compID><![CDATA[BKGKCC96L2TPZKAC]]></compID>
+			<vVoiceName><![CDATA[KAITO_V3_Soft]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>8</vPC>
+			<compID><![CDATA[BKPLC6S7LH3RZKC8]]></compID>
+			<vVoiceName><![CDATA[LEN_V4X_Power_EVEC]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>9</vPC>
+			<compID><![CDATA[BDHEB7W2KTWKYDC5]]></compID>
+			<vVoiceName><![CDATA[KAITO_V3_Whisper]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>10</vPC>
+			<compID><![CDATA[BNRCB9XYKM2GYNCE]]></compID>
+			<vVoiceName><![CDATA[Yukari_Onn]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>11</vPC>
+			<compID><![CDATA[BDHEBZG2KCWKYDC5]]></compID>
+			<vVoiceName><![CDATA[RIN_V4X_Warm]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>12</vPC>
+			<compID><![CDATA[BMGD88HZFLTHTMC7]]></compID>
+			<vVoiceName><![CDATA[LEN_V4X_Cold]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>0</vBS>
+			<vPC>13</vPC>
+			<compID><![CDATA[BCXDC6CZLSZHZCB4]]></compID>
+			<vVoiceName><![CDATA[VY2V3]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+			
+			
+		</vVoice>
+		<vVoice>
+			<vBS>1</vBS>
+			<vPC>0</vPC>
+			<compID><![CDATA[BXENFF42PWRK4XE7]]></compID>
+			<vVoiceName><![CDATA[RIN_V4_English]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+		</vVoice>
+		<vVoice>
+			<vBS>1</vBS>
+			<vPC>1</vPC>
+			<compID><![CDATA[BNGW7FG7E5TRSNC3]]></compID>
+			<vVoiceName><![CDATA[KAITO_V3_English]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+		</vVoice>
+		<vVoice>
+			<vBS>1</vBS>
+			<vPC>2</vPC>
+			<compID><![CDATA[BMFX98L8GLSSWMD3]]></compID>
+			<vVoiceName><![CDATA[LEN_V4_English]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+		</vVoice>
+		<vVoice>
+			<vBS>1</vBS>
+			<vPC>3</vPC>
+			<compID><![CDATA[BEPP62G3DDXLRECA]]></compID>
+			<vVoiceName><![CDATA[DEX]]></vVoiceName>
+			<vVoiceParam>
+				<bre>0</bre>
+				<bri>0</bri>
+				<cle>0</cle>
+				<gen>0</gen>
+				<ope>0</ope>
+			</vVoiceParam>
+		</vVoice>
+	</vVoiceTable>
+	<mixer>
+		<masterUnit>
+			<outDev>0</outDev>
+			<retLevel>0</retLevel>
+			<vol>0</vol>
+		</masterUnit>
+		<vsUnit>
+			<vsTrackNo>0</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>1</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>2</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>3</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>4</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>60</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>5</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>6</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>7</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>8</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>9</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>10</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>11</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>12</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>13</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>14</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<vsUnit>
+			<vsTrackNo>15</vsTrackNo>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</vsUnit>
+		<seUnit>
+			<inGain>0</inGain>
+			<sendLevel>-898</sendLevel>
+			<sendEnable>0</sendEnable>
+			<mute>0</mute>
+			<solo>0</solo>
+			<pan>64</pan>
+			<vol>0</vol>
+		</seUnit>
+		<karaokeUnit>
+			<inGain>0</inGain>
+			<mute>0</mute>
+			<solo>0</solo>
+			<vol>-129</vol>
+		</karaokeUnit>
+	</mixer>
+	<masterTrack>
+		<seqName><![CDATA[none]]></seqName>
+		<comment><![CDATA[none]]></comment>
+		<resolution>480</resolution>
+		<preMeasure>4</preMeasure>
+		<timeSig>
+			<posMes>0</posMes>
+			<nume>4</nume>
+			<denomi>4</denomi>
+		</timeSig>
+		<timeSig>
+			<posMes>4</posMes>
+			<nume>4</nume>
+			<denomi>4</denomi>
+		</timeSig>
+		<tempo>
+			<posTick>0</posTick>
+			<bpm>12500</bpm>
+		</tempo>
+		<tempo>
+			<posTick>7680</posTick>
+			<bpm>12500</bpm>
+		</tempo>
+	</masterTrack>
+	<vsTrack>
+		<vsTrackNo>0</vsTrackNo>
+		<trackName><![CDATA[KAITO_V3_Straight]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[KAITO_V3_Straight]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>6</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>1</vsTrackNo>
+		<trackName><![CDATA[KAITO_V3_Soft]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[KAITO_V3_Soft]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>7</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>2</vsTrackNo>
+		<trackName><![CDATA[KAITO_V3_Whisper]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[KAITO_V3_Whisper]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>9</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>3</vsTrackNo>
+		<trackName><![CDATA[KAITO_V3_English]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[KAITO_V3_English]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>1</vBS>
+				<vPC>1</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>4</vsTrackNo>
+		<trackName><![CDATA[RIN_V4X_Power_EVEC]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[RIN_V4X_Power_EVEC]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>4</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>5</vsTrackNo>
+		<trackName><![CDATA[RIN_V4X_Warm]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[RIN_V4X_Warm]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>11</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>6</vsTrackNo>
+		<trackName><![CDATA[RIN_V4X_Sweet]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[RIN_V4X_Sweet]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>0</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>7</vsTrackNo>
+		<trackName><![CDATA[RIN_V4_English]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[RIN_V4_English]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>1</vBS>
+				<vPC>0</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>8</vsTrackNo>
+		<trackName><![CDATA[LEN_V4X_Power_EVEC]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[LEN_V4X_Power_EVEC]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>8</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>9</vsTrackNo>
+		<trackName><![CDATA[LEN_V4X_Cold]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[LEN_V4X_Cold]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>12</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>10</vsTrackNo>
+		<trackName><![CDATA[LEN_V4X_Serious]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[LEN_V4X_Serious]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>5</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>11</vsTrackNo>
+		<trackName><![CDATA[LEN_V4_English]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[LEN_V4_English]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>1</vBS>
+				<vPC>2</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>12</vsTrackNo>
+		<trackName><![CDATA[DEX]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[DEX]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>1</vBS>
+				<vPC>3</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>13</vsTrackNo>
+		<trackName><![CDATA[VY2V3]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[VY2V3]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>13</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>14</vsTrackNo>
+		<trackName><![CDATA[VY2V3_falsetto]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[VY2V3_falsetto]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>2</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<vsTrack>
+		<vsTrackNo>15</vsTrackNo>
+		<trackName><![CDATA[Yukari_Jun]]></trackName>
+		<comment><![CDATA[Track]]></comment>
+		<musicalPart><posTick>7680</posTick><playTime>1920</playTime><partName><![CDATA[Yukari_Jun]]></partName><comment><![CDATA[]]></comment><stylePlugin>
+				<stylePluginID><![CDATA[ACA9C502-A04B-42b5-B2EB-5CEA36D16FCE]]></stylePluginID>
+				<stylePluginName><![CDATA[VOCALOID2 Compatible Style]]></stylePluginName>
+				<version><![CDATA[3.0.0.1]]></version>
+			</stylePlugin><partStyle>
+				<attr id="accent">50</attr>
+				<attr id="bendDep">8</attr>
+				<attr id="bendLen">0</attr>
+				<attr id="decay">50</attr>
+				<attr id="fallPort">0</attr>
+				<attr id="opening">127</attr>
+				<attr id="risePort">0</attr>
+			</partStyle><singer>
+				<posTick>0</posTick>
+				<vBS>0</vBS>
+				<vPC>1</vPC>
+			</singer><mCtrl>
+				<posTick>0</posTick>
+				<attr id="PBS">1</attr>
+			</mCtrl></musicalPart>
+	</vsTrack>
+	<seTrack>
+	</seTrack>
+	<karaokeTrack>
+	</karaokeTrack>
+	<aux>
+		<auxID><![CDATA[AUX_VST_HOST_CHUNK_INFO]]></auxID>
+		<content><![CDATA[VlNDSwAAAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=]]></content>
+	</aux>
+</vsq3>

@@ -7,6 +7,7 @@ import (
 	"github.com/but80/talklistener/internal/generator"
 	"github.com/but80/talklistener/internal/globalopt"
 	"github.com/but80/talklistener/internal/julius"
+	"github.com/but80/talklistener/internal/vsqx"
 	"github.com/comail/colog"
 	"github.com/urfave/cli"
 
@@ -28,12 +29,28 @@ const description = `
      - ディクテーションキット https://github.com/julius-speech/dictation-kit
 `
 
+func singerList() string {
+	result := ""
+	line := "     "
+	for _, s := range vsqx.Singers() {
+		if 80 <= len(line)+2+len(s) {
+			line = line[:len(line)-1]
+			result += "\n" + line
+			line = "     "
+		}
+		line += s + ", "
+	}
+	line = line[:len(line)-2]
+	result += "\n" + line
+	return "   シンガー一覧:" + result
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "talklistener"
 	app.Version = version
 	app.Usage = "話し声を録音したwavファイルからVocaloid3シーケンスを生成します"
-	app.Description = strings.TrimSpace(description)
+	app.Description = strings.TrimSpace(description) + "\n\n" + singerList()
 	app.Authors = []cli.Author{
 		{
 			Name:  "but80",
@@ -43,6 +60,11 @@ func main() {
 	app.HelpName = "talklistener"
 	app.UsageText = "talklistener [オプション...] <音声ファイル>"
 	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "singer, s",
+			Usage: "シンガー",
+			Value: vsqx.DefaultSinger,
+		},
 		cli.IntFlag{
 			Name:  "transpose, t",
 			Usage: `出力VSQX内の全ノートの音高をずらします（単位：セント）`,
@@ -78,7 +100,7 @@ func main() {
 			Usage: `キャッシュ "音声ファイル名.tlo/" を再作成します`,
 		},
 		cli.BoolFlag{
-			Name:  "silent, s",
+			Name:  "quiet, q",
 			Usage: "進捗情報等の表示を抑制します",
 		},
 		cli.BoolFlag{
@@ -121,6 +143,7 @@ func main() {
 			AudioFile:      wavfile,
 			TextFile:       txtfile,
 			OutFile:        outfile,
+			Singer:         ctx.String("singer"),
 			F0LPFCutoff:    ctx.String("f0-cutoff"),
 			DictationModel: ctx.String("dictation-model"),
 			SplitConsonant: ctx.Bool("split-consonant"),
