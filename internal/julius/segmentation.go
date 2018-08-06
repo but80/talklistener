@@ -109,6 +109,8 @@ func Segmentate(wavfile, wordsfile, objPrefix string) (*Result, error) {
 
 	argv := []string{
 		"julius",
+		"-fshift", "160",
+		"-fsize", "400",
 		"-h", hmmTmpName, // HMM definition
 		"-dfa", objPrefix + ".dfa", // DFA grammar
 		"-v", objPrefix + ".dict", // dictionary

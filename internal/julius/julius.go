@@ -55,8 +55,9 @@ func cStringArray(a []string) []*C.char {
 }
 
 const (
-	framePeriod = 0.01
-	offsetAlign = 0.0125 // offset for result in ms: 25ms / 2
+	frameShiftSize = 0.01
+	frameSize      = 0.025
+	offsetAlign    = frameSize / 2.0
 )
 
 type Segment struct {
@@ -144,7 +145,7 @@ func onPass1Frame(recog *C.Recog, data unsafe.Pointer) {
 	samples := int(recog.speechlen)
 	rate := int(recog.jconf.input.sfreq)
 	totalSec := float64(samples) / float64(rate)
-	OnProgress(float64(result.frame)*framePeriod, totalSec)
+	OnProgress(float64(result.frame)*frameShiftSize, totalSec)
 	result.frame++
 }
 
@@ -251,13 +252,10 @@ func (result *Result) update(proc *C.RecogProcess) {
 					seg := Segment{
 						BeginFrame: begin,
 						EndFrame:   end,
-						BeginTime:  float64(begin) * framePeriod,
-						EndTime:    float64(end+1)*framePeriod + offsetAlign,
+						BeginTime:  float64(begin)*frameShiftSize + offsetAlign,
+						EndTime:    float64(end+1)*frameShiftSize + offsetAlign + frameSize,
 						Unit:       centerName(unit),
 						Score:      score,
-					}
-					if begin != 0 {
-						seg.BeginTime += offsetAlign
 					}
 					result.Segments = append(result.Segments, seg)
 				}

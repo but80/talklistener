@@ -25,10 +25,8 @@ const (
 	bpm              = 125.00
 	tickTime         = 60.0 / bpm / float64(resolution) // = 0.001
 	parallel         = true
-	extendNoteTime   = 0.05
+	extendNoteTime   = 0.025
 	shiftBendTime    = 0.0
-	durationAtMinVel = 0.20
-	durationAtMaxVel = 0.00
 )
 
 func timeToTick(time float64) int {
@@ -36,7 +34,7 @@ func timeToTick(time float64) int {
 }
 
 func durationToVelocity(dur float64) int {
-	velocity := 127 - int(math.Round((dur-durationAtMaxVel)*127.0/(durationAtMinVel-durationAtMaxVel)))
+	velocity := int(math.Round(16.0 - (math.Log10(dur)+0.622511616623867)*160.8972722))
 	if velocity < 1 {
 		velocity = 1
 	} else if 127 < velocity {
@@ -142,7 +140,8 @@ func (gen *generator) feedPitchBends(notes []float64, timeOffset float64) {
 	bendSense := 24
 	gen.vsqx.AddMCtrl(.0, "PBS", bendSense)
 	t := timeOffset
-	for _, note := range notes {
+	last := 0
+	for i, note := range notes {
 		tick := int(math.Round(t / tickTime))
 		dNote := note - float64(gen.noteCenter)
 		bend := int(math.Round(8192.0 * dNote / float64(bendSense)))
@@ -151,7 +150,10 @@ func (gen *generator) feedPitchBends(notes []float64, timeOffset float64) {
 		} else if 8191 < bend {
 			bend = 8191
 		}
-		gen.vsqx.AddMCtrl(tick, "PIT", bend)
+		if i == 0 || last != bend {
+			gen.vsqx.AddMCtrl(tick, "PIT", bend)
+		}
+		last = bend
 		t += notesFramePeriod
 	}
 }
