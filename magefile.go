@@ -115,7 +115,7 @@ func buildSent() error {
 		"#define MAXSPEECHLEN  3200000",
 	}
 
-	if ok, _ := target.Path(dst, src); ok && matchesAll(src, to) {
+	if exists(dst) && matchesAll(src, to) {
 		return nil
 	}
 	if err := replaceAll(src, from, to); err != nil {

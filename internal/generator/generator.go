@@ -6,7 +6,6 @@ import (
 	"log"
 	"math"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/but80/talklistener/internal/julius"
 	"github.com/but80/talklistener/internal/vsqx"
+	"github.com/krig/go-sox"
 	"github.com/pkg/errors"
 )
 
@@ -168,19 +168,31 @@ func (gen *generator) dump() {
 
 func convertAudioFile(in, out string) error {
 	log.Print("info: 音声ファイルのフォーマットを変換中...")
-	cmd := exec.Command(
-		"/usr/bin/afconvert",
-		"-f", "WAVE",
-		"-d", "I16@16000",
-		"-c", "1",
-		"-o", out,
-		in,
-	)
-	if captured, err := cmd.CombinedOutput(); err != nil {
-		return errors.Wrapf(err,
-			"afconvert の実行中にエラーが発生しました:\n%s\n%s",
-			strings.Join(cmd.Args, " "), captured,
-		)
+
+	fin := sox.OpenRead(in)
+	if fin == nil {
+		return errors.Errorf("Failed to open input file: %s", in)
+	}
+	defer fin.Release()
+
+	signalInfo := sox.NewSignalInfo(16000, 1, 16, 0, nil)
+	encodingInfo := sox.NewEncodingInfo(sox.ENCODING_SIGN2, 16, 0, false)
+	fout := sox.OpenWrite(out, signalInfo, encodingInfo, nil)
+	if fout == nil {
+		return errors.Errorf("Failed to open output file: %s", out)
+	}
+	defer fout.Release()
+
+	const readSize = 2048
+	samples := make([]sox.Sample, readSize)
+	for {
+		m := fin.Read(samples, readSize)
+		if m <= 0 {
+			break
+		}
+		if fout.Write(samples, uint(m)) != m {
+			return errors.Errorf("Failed to write file: %s", out)
+		}
 	}
 	return nil
 }

@@ -2,8 +2,8 @@ github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c h1:bzYQ6WpR+t35/y19HU
 github.com/comail/colog v0.0.0-20160416085026-fba8e7b1f46c/go.mod h1:1WwgAwMKQLYG5I2FBhpVx94YTOAuB2W59IZ7REjSE6Y=
 github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15 h1:cW/amwGEJK5MSKntPXRjX4dxs/nGxGT8gXKIsKFmHGc=
 github.com/jessevdk/go-assets v0.0.0-20160921144138-4f4301a06e15/go.mod h1:Fdm/oWRW+CH8PRbLntksCNtmcCBximKPkVQYvmMl80k=
-github.com/magefile/mage v0.0.0-20180411170307-771ebed3d686 h1:DP0e1KyfOAz6Sr1QIBWKBp/sNmEcHx4q4Z0nNpT5UzE=
-github.com/magefile/mage v0.0.0-20180411170307-771ebed3d686/go.mod h1:IUDi13rsHje59lecXokTfGX0QIzO45uVPlXnJYsXepA=
+github.com/krig/go-sox v0.0.0-20180617124112-7d2f8ae31981 h1:ir4NRMjkkSP63kAOiFDTQN3dcs0o6c0f1cfpe9V8JT0=
+github.com/krig/go-sox v0.0.0-20180617124112-7d2f8ae31981/go.mod h1:0uPmTzngejep+JBRxvlmijKKMexuskpMCzWFp+oFzc4=
 github.com/magefile/mage v1.9.0 h1:t3AU2wNwehMCW97vuqQLtw6puppWXHO+O2MHo5a50XE=
 github.com/magefile/mage v1.9.0/go.mod h1:z5UZb/iS3GoOSn0JgWuiw7dxlurVYTu+/jHXqQg881A=
 github.com/mjibson/go-dsp v0.0.0-20180508042940-11479a337f12 h1:dd7vnTDfjtwCETZDrRe+GPYNLA1jBtbZeyfyE8eZCyk=
