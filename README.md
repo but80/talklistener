@@ -36,7 +36,7 @@ go run mage.go build
 sudo mv ./talklistener /usr/local/bin/
 ```
 
-Julius, WORLD が依存しているライブラリが必要になりますので、不足している場合は事前にインストールしてください。
+Julius, WORLD が依存しているライブラリ および libsox が必要になりますので、不足している場合は事前にインストールしてください。
 
 ## 使用方法
 
