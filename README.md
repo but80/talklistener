@@ -1,6 +1,6 @@
 # TalkListener
 
-話し声を録音したwavファイルからVocaloid3シーケンスを生成するCLIツールです。
+話し声を録音した音声ファイルからVocaloid3シーケンスを生成するCLIツールです。
 
 - [デモ](https://twitter.com/bucchigiri/status/1023193037193719808)
 
@@ -42,14 +42,14 @@ Julius, WORLD が依存しているライブラリ および libsox が必要に
 
 ```
 NAME:
-   talklistener - 話し声を録音したwavファイルからVocaloid3シーケンスを生成します
+   talklistener - 話し声を録音した音声ファイルからVocaloid3シーケンスを生成します
 
 USAGE:
    talklistener [オプション...] <音声ファイル>
 
 DESCRIPTION:
-   - <音声ファイル> は .wav .aiff .mp3 等のフォーマットに対応しています。
-     詳細は afconvert のヘルプを afconvert -hf にてお読みください。
+   - <音声ファイル> は .wav .flac .mp3 等のフォーマットに対応しています。
+     詳細はSoXのプロジェクトページ http://sox.sourceforge.net/ をお読みください。
    - イントネーションの抽出に「音声分析変換合成システム WORLD」
      https://github.com/mmorise/World を使用しています。
    - 発音タイミングの抽出に「大語彙連続音声認識エンジン Julius」
@@ -113,7 +113,9 @@ GLOBAL OPTIONS:
 ### 出力
 
 デフォルトでは、`<音声ファイル>` の拡張子を `.vsqx` に置換した名前で生成シーケンスを保存します。
-**Vocaloid Editor 3 で開くとエラーとなる事象が確認されています。Piapro Studio でのインポートをおすすめします。**
+
+出力ファイルを **Vocaloid Editor 3 で開くとエラーとなる** 事象が確認されています。
+**Piapro Studio でのインポートをおすすめします** 。
 
 ## 使用例
 

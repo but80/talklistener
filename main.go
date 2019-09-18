@@ -18,8 +18,8 @@ import (
 var version = "unknown"
 
 const description = `
-   - <音声ファイル> は .wav .aiff .mp3 等のフォーマットに対応しています。
-     詳細は afconvert のヘルプを afconvert -hf にてお読みください。
+   - <音声ファイル> は .wav .flac .mp3 等のフォーマットに対応しています。
+     詳細はSoXのプロジェクトページ http://sox.sourceforge.net/ をお読みください。
    - イントネーションの抽出に「音声分析変換合成システム WORLD」
      https://github.com/mmorise/World を使用しています。
    - 発音タイミングの抽出に「大語彙連続音声認識エンジン Julius」
@@ -49,7 +49,7 @@ func main() {
 	app := cli.NewApp()
 	app.Name = "talklistener"
 	app.Version = version
-	app.Usage = "話し声を録音したwavファイルからVocaloid3シーケンスを生成します"
+	app.Usage = "話し声を録音した音声ファイルからVocaloid3シーケンスを生成します"
 	app.Description = strings.TrimSpace(description) + "\n\n" + singerList()
 	app.Authors = []cli.Author{
 		{
