@@ -8,7 +8,7 @@
 
 - 以下のいずれかのOS
   - macOS Sierra 以降
-  - Ubuntu 18.04 on WSL
+  - ~Ubuntu 18.04 on WSL~ 対応中
 
 ## インストール手順
 
