@@ -6,7 +6,9 @@
 
 ## 必須環境
 
-- macOS Sierra 以降
+- 以下のいずれかのOS
+  - macOS Sierra 以降
+  - Ubuntu 18.04 on WSL
 
 ## インストール手順
 
@@ -23,7 +25,7 @@ brew tap but80/tap
 brew install but80/tap/talklistener
 ```
 
-### Go 1.10 でのインストール（開発者向け）
+### Go 1.12 でのインストール（開発者向け）
 
 ```bash
 go run mage.go install

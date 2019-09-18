@@ -1,7 +1,7 @@
 package world
 
 /*
-#cgo LDFLAGS: -L../../cmodules/world/build -lworld -lstdc++
+#cgo LDFLAGS: -L../../cmodules/world/build -lworld -lstdc++ -lm
 #cgo CFLAGS: -I../../cmodules/world/src
 #include "world/harvest.h"
 extern void Harvest(const double *x, int x_length, int fs, const HarvestOption *option, double *temporal_positions, double *f0);

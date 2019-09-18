@@ -1,0 +1,15 @@
+run:
+  skip-dirs:
+    - cmodules
+    - tools
+    - vendor
+linters:
+  disable:
+    - errcheck
+    - structcheck
+  enable:
+    - unused
+    - vet
+    - golint
+    - goimports
+    - gocyclo

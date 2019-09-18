@@ -17,6 +17,11 @@ import (
 	"golang.org/x/tools/imports"
 )
 
+func init() {
+	os.Setenv("GOFLAGS", "-mod=vendor")
+	os.Setenv("GO111MODULE", "on")
+}
+
 var sep = string(filepath.Separator)
 
 func exists(filename string) bool {
@@ -93,25 +98,6 @@ func replaceAll(file string, fromRegex []string, to []string) error {
 	return ioutil.WriteFile(file, code, 0644)
 }
 
-// libjulius のビルド
-func buildJulius() error {
-	if exists("cmodules/julius/libjulius/libjulius.a") {
-		return nil
-	}
-	if err := pushDir("cmodules/julius/libjulius"); err != nil {
-		return err
-	}
-	defer popDir()
-	_ = sh.RunV("make", "distclean")
-	if err := sh.RunV("./configure"); err != nil {
-		return err
-	}
-	if err := sh.RunV("make"); err != nil {
-		return err
-	}
-	return nil
-}
-
 // libsent のビルド
 func buildSent() error {
 	mg.SerialDeps(Submodules)
@@ -129,9 +115,7 @@ func buildSent() error {
 		"#define MAXSPEECHLEN  3200000",
 	}
 
-	// TODO: dst, src の順序が逆
-	// workaround for https://github.com/magefile/mage/issues/122
-	if ok, _ := target.Path(src, dst); ok && matchesAll(src, to) {
+	if ok, _ := target.Path(dst, src); ok && matchesAll(src, to) {
 		return nil
 	}
 	if err := replaceAll(src, from, to); err != nil {
@@ -149,8 +133,28 @@ func buildSent() error {
 	return nil
 }
 
+// libjulius のビルド
+func buildJulius() error {
+	mg.SerialDeps(buildSent)
+	if exists("cmodules/julius/libjulius/libjulius.a") {
+		return nil
+	}
+	if err := pushDir("cmodules/julius/libjulius"); err != nil {
+		return err
+	}
+	defer popDir()
+	_ = sh.RunV("make", "distclean")
+	if err := sh.RunV("./configure"); err != nil {
+		return err
+	}
+	if err := sh.RunV("make"); err != nil {
+		return err
+	}
+	return nil
+}
+
 func buildWorld() error {
-	mg.SerialDeps(Submodules)
+	mg.SerialDeps(buildJulius)
 	if exists("cmodules/world/build/libworld.a") {
 		return nil
 	}
@@ -163,13 +167,8 @@ func buildWorld() error {
 }
 
 // Cモジュールのビルド
-func Cmodules() error {
-	if err := buildJulius(); err != nil {
-		return err
-	}
-	if err := buildSent(); err != nil {
-		return err
-	}
+func cmodules() error {
+	mg.SerialDeps(buildWorld)
 	return nil
 }
 
@@ -177,9 +176,7 @@ func Cmodules() error {
 func Assets() error {
 	dst := "internal/assets/assets.go"
 	src := "cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm"
-	// TODO: dst, src の順序が逆
-	// workaround for https://github.com/magefile/mage/issues/122
-	if ok, _ := target.Path(src, dst); ok {
+	if ok, _ := target.Path(dst, src); ok {
 		return nil
 	}
 
@@ -200,7 +197,7 @@ func Assets() error {
 
 // バイナリのビルド
 func Build() error {
-	mg.SerialDeps(Cmodules)
+	mg.SerialDeps(cmodules)
 	if err := sh.RunV("go", "build", "."); err != nil {
 		return err
 	}
@@ -209,7 +206,7 @@ func Build() error {
 
 // インストール
 func Install() error {
-	mg.SerialDeps(Cmodules)
+	mg.SerialDeps(cmodules)
 	if err := sh.RunV("go", "install", "."); err != nil {
 		return err
 	}
@@ -218,7 +215,7 @@ func Install() error {
 
 // デモの実行
 func Run() error {
-	// mg.SerialDeps(Cmodules)
+	// mg.SerialDeps(cmodules)
 	args := []string{
 		"run", "main.go",
 		"-o", "output/test.vsqx",
@@ -233,7 +230,7 @@ func Run() error {
 
 // テストの実行
 func Test() error {
-	mg.SerialDeps(Cmodules)
+	mg.SerialDeps(cmodules)
 	if err := sh.RunV("go", "test", "./..."); err != nil {
 		return err
 	}
@@ -242,7 +239,7 @@ func Test() error {
 
 // コーディングスタイルのチェック
 func Lint() error {
-	if err := sh.RunV("gometalinter", "--config=.gometalinter.json", "./..."); err != nil {
+	if err := sh.RunV("golangci-lint", "run"); err != nil {
 		return err
 	}
 	return nil
