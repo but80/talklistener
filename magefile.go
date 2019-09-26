@@ -4,6 +4,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -13,7 +14,6 @@ import (
 	"github.com/jessevdk/go-assets"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
-	"github.com/magefile/mage/target"
 	"golang.org/x/tools/imports"
 )
 
@@ -98,12 +98,10 @@ func replaceAll(file string, fromRegex []string, to []string) error {
 	return ioutil.WriteFile(file, code, 0644)
 }
 
-// libsent のビルド
-func buildSent() error {
+// libsent のパラメータを変更
+func replaceSentParameters() error {
 	mg.SerialDeps(Submodules)
-	dir := filepath.FromSlash("cmodules/julius/libsent")
-	src := filepath.Join(dir, "include", "sent", "speech.h")
-	dst := filepath.Join(dir, "libsent.a")
+	src := filepath.FromSlash("cmodules/julius/libsent/include/sent/speech.h")
 
 	// Juliusが処理可能な語長・音長の制約を拡大
 	from := []string{
@@ -115,31 +113,38 @@ func buildSent() error {
 		"#define MAXSPEECHLEN  3200000",
 	}
 
-	if exists(dst) && matchesAll(src, to) {
+	if matchesAll(src, to) {
+		fmt.Println("libsent のパラメータは変更済みです")
 		return nil
 	}
+	fmt.Println("libsent のパラメータを変更中...")
 	if err := replaceAll(src, from, to); err != nil {
 		return err
 	}
-
-	// リビルド
-	if err := pushDir(dir); err != nil {
-		return err
-	}
-	defer popDir()
-	_ = sh.RunV("make", "distclean")
-	_ = sh.RunV("." + sep + "configure")
-	_ = sh.RunV("make")
 	return nil
+}
+
+func isNewer(dst, src string) bool {
+	dststat, err := os.Stat(dst)
+	if err != nil {
+		return false
+	}
+	srcstat, err := os.Stat(src)
+	if err != nil {
+		return false
+	}
+	return dststat.ModTime().After(srcstat.ModTime())
 }
 
 // libjulius のビルド
 func buildJulius() error {
-	mg.SerialDeps(buildSent)
-	if exists("cmodules/julius/libjulius/libjulius.a") {
+	mg.SerialDeps(replaceSentParameters)
+	if isNewer("cmodules/julius/libjulius/libjulius.a", "cmodules/julius/libsent/include/sent/speech.h") {
+		fmt.Println("libjulius.a は最新です")
 		return nil
 	}
-	if err := pushDir("cmodules/julius/libjulius"); err != nil {
+	fmt.Println("julius をビルド中...")
+	if err := pushDir("cmodules/julius"); err != nil {
 		return err
 	}
 	defer popDir()
@@ -155,9 +160,11 @@ func buildJulius() error {
 
 func buildWorld() error {
 	mg.SerialDeps(buildJulius)
-	if exists("cmodules/world/build/libworld.a") {
+	if isNewer("cmodules/world/build/libworld.a", "cmodules/world/libsent/include/sent/speech.h") {
+		fmt.Println("libworld.a は最新です")
 		return nil
 	}
+	fmt.Println("world をビルド中...")
 	if err := pushDir("cmodules/world"); err != nil {
 		return err
 	}
@@ -176,7 +183,7 @@ func cmodules() error {
 func Assets() error {
 	dst := "internal/assets/assets.go"
 	src := "cmodules/segmentation-kit/models/hmmdefs_monof_mix16_gid.binhmm"
-	if ok, _ := target.Path(dst, src); ok {
+	if isNewer(dst, src) {
 		return nil
 	}
 
