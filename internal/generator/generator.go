@@ -27,6 +27,7 @@ const (
 	parallel         = true
 	extendNoteTime   = 0.025
 	shiftBendTime    = 0.0
+	baseF0Delay      = 0.035
 )
 
 func timeToTick(time float64) int {
@@ -231,6 +232,7 @@ type GenerateOptions struct {
 	OutFile        string
 	Singer         string
 	F0LPFCutoff    string
+	F0Delay        float64
 	DictationModel string
 	SplitConsonant bool
 	Transpose      int
@@ -292,7 +294,7 @@ func Generate(opts *GenerateOptions) error {
 
 	wg.Add(1)
 	noteCenter := int(a3Note)
-	notesDelay := .0
+	notesDelay := -(opts.F0Delay + baseF0Delay)
 	notes := []float64{}
 	f0done := false
 	go func() {
@@ -331,7 +333,7 @@ func Generate(opts *GenerateOptions) error {
 		notes = resample(notes, resampleRate)
 		if opts.F0LPFCutoff != "" {
 			notes = convolve(notes, firLPF[opts.F0LPFCutoff])
-			notesDelay = float64(len(firLPF[opts.F0LPFCutoff])) / 2.0 * notesFramePeriod
+			notesDelay += float64(len(firLPF[opts.F0LPFCutoff])) / 2.0 * notesFramePeriod
 		}
 	}()
 

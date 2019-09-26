@@ -80,10 +80,15 @@ func main() {
 		cli.StringFlag{
 			Name:  "f0-cutoff, f",
 			Usage: "基本周波数の変動にかけるLPFのカットオフ周波数 (" + strings.Join(generator.FIRLPFCutoffs, ", ") + ")",
-			Value: "1.0",
+			Value: "1.5",
+		},
+		cli.Float64Flag{
+			Name:  "f0-delay, d",
+			Usage: "発音タイミングに対する基本周波数の変動を遅らせます（単位：ミリ秒）",
+			Value: .0,
 		},
 		cli.StringFlag{
-			Name:  "dictation-model, d",
+			Name:  "dictation-model, m",
 			Usage: "発話内容の認識に使用するモデル (" + strings.Join(julius.DictationModelNames, ", ") + ")",
 			Value: "ssr",
 		},
@@ -145,6 +150,7 @@ func main() {
 			OutFile:        outfile,
 			Singer:         ctx.String("singer"),
 			F0LPFCutoff:    ctx.String("f0-cutoff"),
+			F0Delay:        ctx.Float64("f0-delay") * .001,
 			DictationModel: ctx.String("dictation-model"),
 			SplitConsonant: ctx.Bool("split-consonant"),
 			Transpose:      ctx.Int("transpose"),

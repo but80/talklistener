@@ -205,6 +205,7 @@ func Assets() error {
 // バイナリのビルド
 func Build() error {
 	mg.SerialDeps(cmodules)
+	fmt.Println("talklistener をビルド中...")
 	if err := sh.RunV("go", "build", "."); err != nil {
 		return err
 	}
