@@ -8,15 +8,28 @@ brew:
     owner: but80
     name: homebrew-tap
 builds:
-  - goos:
+  - id: talklistener
+    goos:
       - linux
       - darwin
       # - windows
     goarch:
       - amd64
-    main: .
+    ignore:
+      - goos: linux
+        goarch: 386
+      - goos: darwin
+        goarch: 386
+      - goos: windows
+        goarch: 386
+    main: ./main.go
     ldflags: -s -w -X main.version={{.Version}}
     binary: talklistener
+    hooks:
+      pre: GO111MODULE=on go run -mod=vendor mage.go cmodules
+before:
+  hooks:
+    - GO111MODULE=on go run -mod=vendor mage.go cmodules
 archive:
   format: tar.gz
   format_overrides:
@@ -26,3 +39,12 @@ archive:
   files:
     - LICENSE*
     - README*
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^Update README'

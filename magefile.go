@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/jessevdk/go-assets"
+	_ "github.com/magefile/mage/mage"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"golang.org/x/tools/imports"
@@ -174,7 +175,7 @@ func buildWorld() error {
 }
 
 // Cモジュールのビルド
-func cmodules() error {
+func Cmodules() error {
 	mg.SerialDeps(buildWorld)
 	return nil
 }
@@ -204,7 +205,7 @@ func Assets() error {
 
 // バイナリのビルド
 func Build() error {
-	mg.SerialDeps(cmodules)
+	mg.SerialDeps(Cmodules)
 	fmt.Println("talklistener をビルド中...")
 	if err := sh.RunV("go", "build", "."); err != nil {
 		return err
@@ -214,7 +215,7 @@ func Build() error {
 
 // インストール
 func Install() error {
-	mg.SerialDeps(cmodules)
+	mg.SerialDeps(Cmodules)
 	if err := sh.RunV("go", "install", "."); err != nil {
 		return err
 	}
@@ -223,7 +224,7 @@ func Install() error {
 
 // デモの実行
 func Run() error {
-	// mg.SerialDeps(cmodules)
+	// mg.SerialDeps(Cmodules)
 	args := []string{
 		"run", "main.go",
 		"-o", "output/test.vsqx",
@@ -238,7 +239,7 @@ func Run() error {
 
 // テストの実行
 func Test() error {
-	mg.SerialDeps(cmodules)
+	mg.SerialDeps(Cmodules)
 	if err := sh.RunV("go", "test", "./..."); err != nil {
 		return err
 	}
