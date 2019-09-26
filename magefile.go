@@ -124,16 +124,16 @@ func replaceSentParameters() error {
 	return nil
 }
 
-func isNewer(dst, src string) bool {
-	dststat, err := os.Stat(dst)
+func isNewer(this, that string) bool {
+	sThis, err := os.Stat(this)
 	if err != nil {
 		return false
 	}
-	srcstat, err := os.Stat(src)
+	sThat, err := os.Stat(that)
 	if err != nil {
 		return false
 	}
-	return dststat.ModTime().After(srcstat.ModTime())
+	return 0 < sThis.Size() && sThis.ModTime().After(sThat.ModTime())
 }
 
 // libjulius のビルド

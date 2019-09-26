@@ -209,7 +209,7 @@ var jResultStatusMessage = map[int]string{
 }
 
 func (result *Result) update(proc *C.RecogProcess) {
-	if proc.live == 0 {
+	if proc == nil || proc.live == 0 {
 		return
 	}
 	if proc.result.status < 0 {
