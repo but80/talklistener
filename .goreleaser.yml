@@ -9,6 +9,7 @@ brew:
     name: homebrew-tap
 builds:
   - goos:
+      - linux
       - darwin
       # - windows
     goarch:
