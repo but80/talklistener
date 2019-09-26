@@ -28,6 +28,7 @@ const (
 	extendNoteTime   = 0.025
 	shiftBendTime    = 0.0
 	baseF0Delay      = 0.035
+	durationRatio    = .5
 )
 
 func timeToTick(time float64) int {
@@ -35,7 +36,7 @@ func timeToTick(time float64) int {
 }
 
 func durationToVelocity(dur float64) int {
-	velocity := int(math.Round(16.0 - (math.Log10(dur)+0.622511616623867)*160.8972722))
+	velocity := int(math.Round(16.0 - (math.Log10(dur)+0.622511616623867)*160.8972722*durationRatio))
 	if velocity < 1 {
 		velocity = 1
 	} else if 127 < velocity {
