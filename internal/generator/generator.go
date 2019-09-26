@@ -14,7 +14,7 @@ import (
 	"github.com/but80/talklistener/internal/julius"
 	"github.com/but80/talklistener/internal/vsqx"
 	"github.com/krig/go-sox"
-	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 )
 
 const (
@@ -171,7 +171,7 @@ func convertAudioFile(in, out string) error {
 
 	fin := sox.OpenRead(in)
 	if fin == nil {
-		return errors.Errorf("Failed to open input file: %s", in)
+		return xerrors.Errorf("Failed to open input file: %s", in)
 	}
 	defer fin.Release()
 
@@ -179,7 +179,7 @@ func convertAudioFile(in, out string) error {
 	encodingInfo := sox.NewEncodingInfo(sox.ENCODING_SIGN2, 16, 0, false)
 	fout := sox.OpenWrite(out, signalInfo, encodingInfo, nil)
 	if fout == nil {
-		return errors.Errorf("Failed to open output file: %s", out)
+		return xerrors.Errorf("Failed to open output file: %s", out)
 	}
 	defer fout.Release()
 
@@ -191,7 +191,7 @@ func convertAudioFile(in, out string) error {
 			break
 		}
 		if fout.Write(samples, uint(m)) != m {
-			return errors.Errorf("Failed to write file: %s", out)
+			return xerrors.Errorf("Failed to write file: %s", out)
 		}
 	}
 	return nil
@@ -211,7 +211,7 @@ func isNewer(this, that string) bool {
 	if err != nil {
 		return false
 	}
-	return sThis.ModTime().After(sThat.ModTime())
+	return 0 < sThis.Size() && sThis.ModTime().After(sThat.ModTime())
 }
 
 func isEmpty(filename string) bool {
@@ -245,26 +245,35 @@ func Generate(opts *GenerateOptions) error {
 		opts.Singer = vsqx.DefaultSinger
 	}
 
+	if p, err := filepath.Abs(opts.AudioFile); err == nil {
+		opts.AudioFile = p
+	}
 	if !exists(opts.AudioFile) {
 		return fmt.Errorf("%s が見つかりません", opts.AudioFile)
 	}
+
 	if opts.TextFile == "" {
 		opts.TextFile = removeExt(opts.AudioFile) + ".txt"
+	} else if p, err := filepath.Abs(opts.TextFile); err == nil {
+		opts.TextFile = p
 	}
+
 	if opts.OutFile == "" {
 		opts.OutFile = removeExt(opts.AudioFile) + ".vsqx"
+	} else if p, err := filepath.Abs(opts.OutFile); err == nil {
+		opts.OutFile = p
 	}
 
 	name := filepath.Base(opts.AudioFile)
 	objdir := removeExt(opts.AudioFile) + ".tlo"
 	if opts.Recache {
 		if err := os.RemoveAll(objdir); err != nil {
-			return errors.Wrap(err, "キャッシュディレクトリの作成に失敗しました")
+			return xerrors.Errorf("キャッシュディレクトリの作成に失敗しました: %w", err)
 		}
 	}
 	if _, err := os.Stat(objdir); err != nil {
 		if err := os.Mkdir(objdir, 0755); err != nil {
-			return errors.Wrap(err, "キャッシュディレクトリの作成に失敗しました")
+			return xerrors.Errorf("キャッシュディレクトリの作成に失敗しました: %w", err)
 		}
 	}
 	objPrefix := filepath.Join(objdir, name)
@@ -274,7 +283,7 @@ func Generate(opts *GenerateOptions) error {
 		log.Printf("info: フォーマット変換済み音声ファイルのキャッシュを使用します: %s", convertedWavFile)
 	} else {
 		if err := convertAudioFile(opts.AudioFile, convertedWavFile); err != nil {
-			return errors.Wrap(err, "音声ファイルの変換に失敗しました")
+			return xerrors.Errorf("音声ファイルの変換に失敗しました: %w", err)
 		}
 	}
 
@@ -300,7 +309,7 @@ func Generate(opts *GenerateOptions) error {
 			notes, err = wavToF0Note(convertedWavFile, f0file, f0FramePeriod)
 		}
 		if err != nil {
-			errch <- errors.Wrap(err, "基本周波数の推定に失敗しました")
+			errch <- xerrors.Errorf("基本周波数の推定に失敗しました: %w", err)
 			return
 		}
 		noteMin := 128.0
@@ -346,22 +355,24 @@ func Generate(opts *GenerateOptions) error {
 		if isEmpty(opts.TextFile) || opts.Redictate {
 			result, err = julius.Dictate(convertedWavFile, opts.DictationModel)
 			if err != nil {
-				errch <- errors.Wrap(err, "発話内容の推定に失敗しました")
+				errch <- xerrors.Errorf("発話内容の推定に失敗しました: %w", err)
 				return
 			}
 			b := []byte(result.DictationString())
 			if len(b) == 0 {
-				errch <- errors.Wrap(err, "音声ファイル中に認識可能な発話がありませんでした")
+				errch <- xerrors.Errorf("音声ファイル中に認識可能な発話がありませんでした")
 				return
 			}
 			if err := ioutil.WriteFile(opts.TextFile, b, 0644); err != nil {
-				errch <- errors.Wrap(err, "推定した発話内容の保存に失敗しました")
+				errch <- xerrors.Errorf("推定した発話内容の保存に失敗しました: %w", err)
 				return
 			}
+		} else {
+			log.Print("info: 発話内容をテキストファイルから読み込みます")
 		}
 		result, err = julius.Segmentate(convertedWavFile, opts.TextFile, objPrefix)
 		if err != nil {
-			errch <- errors.Wrap(err, "発音タイミングの推定に失敗しました")
+			errch <- xerrors.Errorf("発音タイミングの推定に失敗しました: %w", err)
 			return
 		}
 		if !f0done {
@@ -432,25 +443,25 @@ func Generate(opts *GenerateOptions) error {
 
 		if opts.SplitConsonant {
 			if err := gen.flush(); err != nil {
-				return errors.Wrap(err, "テキストファイルの内容が不正です")
+				return xerrors.Errorf("テキストファイルの内容が不正です: %w", err)
 			}
 		}
 		gen.setVowel(beginTime, endTime, unit)
 		if err := gen.flush(); err != nil {
-			return errors.Wrap(err, "テキストファイルの内容が不正です")
+			return xerrors.Errorf("テキストファイルの内容が不正です: %w", err)
 		}
 	}
 	if err := gen.flush(); err != nil {
-		return errors.Wrap(err, "テキストファイルの内容が不正です")
+		return xerrors.Errorf("テキストファイルの内容が不正です: %w", err)
 	}
 
 	if err := ioutil.WriteFile(objPrefix+".seg", []byte(segsData), 0644); err != nil {
-		return errors.Wrap(err, "セグメンテーションキャッシュファイルの保存に失敗しました")
+		return xerrors.Errorf("セグメンテーションキャッシュファイルの保存に失敗しました: %w", err)
 	}
 
 	gen.feedPitchBends(notes, shiftBendTime)
 	if err := gen.save(opts.OutFile); err != nil {
-		return errors.Wrap(err, "VSQXの保存に失敗しました")
+		return xerrors.Errorf("VSQXの保存に失敗しました: %w", err)
 	}
 
 	log.Printf("info: 出力ノート数: %d", gen.vsqx.NoteCount())

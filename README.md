@@ -77,7 +77,7 @@ GLOBAL OPTIONS:
    --split-consonant, -c              子音を母音とは別のノートに分割配置します
    --redictate, -R                    発話内容の再認識を行い、その結果をテキストファイルに上書き保存します
    --f0-cutoff value, -f value        基本周波数の変動にかけるLPFのカットオフ周波数 (0.5, 1.0, 1.5, 2.0, 2.5, 3.0) (default: "1.0")
-   --dictation-model value, -d value  発話内容の認識に使用するモデル (std-gmm, std-dnn, ssr-dnn) (default: "ssr-dnn")
+   --dictation-model value, -d value  発話内容の認識に使用するモデル (dictation, ssr, lsr) (default: "ssr")
    --out value                        出力VSQXを指定した名前で保存します（省略時は "音声ファイル名.vsqx"）
    --text value                       テキストファイルを指定した名前で保存・ロードします（省略時は "音声ファイル名.txt"）
    --recache, -r                      キャッシュ "音声ファイル名.tlo/" を再作成します

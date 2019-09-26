@@ -85,7 +85,7 @@ func main() {
 		cli.StringFlag{
 			Name:  "dictation-model, d",
 			Usage: "発話内容の認識に使用するモデル (" + strings.Join(julius.DictationModelNames, ", ") + ")",
-			Value: "ssr-dnn",
+			Value: "ssr",
 		},
 		cli.StringFlag{
 			Name:  "out",

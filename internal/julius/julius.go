@@ -2,7 +2,7 @@ package julius
 
 /*
 #cgo darwin LDFLAGS: -L../../cmodules/julius/libjulius -ljulius -ldl -lpthread -L../../cmodules/julius/libsent -lsent -Wl,-framework -Wl,CoreServices -Wl,-framework -Wl,CoreAudio -Wl,-framework -Wl,AudioUnit -Wl,-framework -Wl,AudioToolbox -lz -lsndfile -liconv -lm
-#cgo linux LDFLAGS: -L../../cmodules/julius/libjulius -ljulius -ldl -lpthread -L../../cmodules/julius/libsent -lsent -lasound -lz -lm -fopenmp
+#cgo linux LDFLAGS: -L../../cmodules/julius/libjulius -ljulius -ldl -lpthread -L../../cmodules/julius/libsent -lsent -lasound -lsndfile -lz -lm -fopenmp
 #cgo CFLAGS: -I../../cmodules/julius/libjulius/include -I../../cmodules/julius/libsent/include
 #include "julius/juliuslib.h"
 
@@ -10,6 +10,7 @@ void onPass1Frame(Recog *recog, void *data);
 void onSegmentBegin(Recog *recog, void *data);
 void onSegmentEnd(Recog *recog, void *data);
 void onResult(Recog *recog, void *data);
+
 static void _register_callbacks(Recog* recog, void* data) {
 	callback_add(recog, CALLBACK_EVENT_PASS1_FRAME, onPass1Frame, data);
 	callback_add(recog, CALLBACK_EVENT_SEGMENT_BEGIN, onSegmentBegin, data);
@@ -167,10 +168,8 @@ func onResult(recog *C.Recog, data unsafe.Pointer) {
 	if recog == nil {
 		return
 	}
-	proc := recog.process_list
-	for proc != nil {
+	for proc := recog.process_list; proc != nil; proc = proc.next {
 		result.update(proc)
-		proc = proc.next
 	}
 }
 
@@ -187,8 +186,38 @@ func centerName(s string) string {
 	return s
 }
 
+const (
+	jResultStatusRejectLong     = -8 // Input rejected by long input
+	jResultStatusBufferOverflow = -7 // Input buffer overflow
+	jResultStatusRejectPower    = -6 // Input rejected by power
+	jResultStatusTerminate      = -5 // Input was terminated by app. request
+	jResultStatusOnlySilence    = -4 // Input contains only silence
+	jResultStatusRejectGmm      = -3 // Input rejected by GMM
+	jResultStatusRejectShort    = -2 // Input rejected by short input
+	jResultStatusFail           = -1 // Recognition ended with no candidate
+	jResultStatusSuccess        = 0  // Recognition output some result
+)
+
+var jResultStatusMessage = map[int]string{
+	jResultStatusRejectPower: "input rejected by power",
+	jResultStatusTerminate:   "input teminated by request",
+	jResultStatusOnlySilence: "input rejected by decoder (silence input result)",
+	jResultStatusRejectGmm:   "input rejected by GMM",
+	jResultStatusRejectShort: "input rejected by short input",
+	jResultStatusRejectLong:  "input rejected by long input",
+	jResultStatusFail:        "search failed",
+}
+
 func (result *Result) update(proc *C.RecogProcess) {
-	if proc == nil || proc.live == 0 || proc.result.status < 0 || proc.lm == nil {
+	if proc.live == 0 {
+		return
+	}
+	if proc.result.status < 0 {
+		msg := jResultStatusMessage[int(proc.result.status)]
+		if msg == "" {
+			msg = "unknown"
+		}
+		log.Printf("debug: no results obtained: %s", msg)
 		return
 	}
 	winfo := proc.lm.winfo
@@ -197,42 +226,31 @@ func (result *Result) update(proc *C.RecogProcess) {
 	}
 	sentnum := int(proc.result.sentnum)
 	for i := 0; i < sentnum; i++ {
-		if proc.result.sent == nil {
-			continue
-		}
 		log.Printf(
 			"debug: num_frame=%d length_msec=%d",
 			int(proc.result.num_frame),   ///< Number of frames of the recognized part
 			int(proc.result.length_msec), ///< Length of the recognized part
 		)
 		sent := C._read_sentence_array(proc.result.sent, C.int(i))
-		if sent == nil {
-			continue
-		}
-		if unsafe.Pointer(&sent.word[0]) != nil {
-			seqnum := int(sent.word_num)
-			if len(sent.word) < seqnum {
-				seqnum = len(sent.word)
-			}
-			dictation := []string{}
-			for i := 0; i < seqnum; i++ {
-				w := int(sent.word[i])
-				wl := int(C._read_uchar_array(winfo.wlen, C.int(w)))
-				for j := 0; j < wl; j++ {
-					p := C._read_hmm_logical_ptr(winfo.wseq, C.int(w))
-					if p == nil {
-						continue
-					}
-					ws := C._read_hmm_logical(p, C.int(j))
-					if ws == nil {
-						continue
-					}
-					unit := C.GoString(ws.name)
-					dictation = append(dictation, centerName(unit))
+		seqnum := int(sent.word_num)
+		dictation := []string{}
+		for i := 0; i < seqnum; i++ {
+			w := int(sent.word[i])
+			wl := int(C._read_uchar_array(winfo.wlen, C.int(w)))
+			for j := 0; j < wl; j++ {
+				p := C._read_hmm_logical_ptr(winfo.wseq, C.int(w))
+				if p == nil {
+					continue
 				}
+				ws := C._read_hmm_logical(p, C.int(j))
+				if ws == nil {
+					continue
+				}
+				unit := C.GoString(ws.name)
+				dictation = append(dictation, centerName(unit))
 			}
-			result.Dictation = append(result.Dictation, dictation)
 		}
+		result.Dictation = append(result.Dictation, dictation)
 
 		for align := sent.align; align != nil; align = align.next {
 			segnum := int(align.num)
