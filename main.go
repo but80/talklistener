@@ -134,7 +134,7 @@ func main() {
 		wavfile := ctx.Args()[0]
 		txtfile := ctx.String("text")
 		outfile := ctx.String("out")
-		globalopt.Verbose = ctx.Bool("verbose")
+		globalopt.Verbose = ctx.Bool("verbose") || ctx.Bool("debug")
 		globalopt.Debug = ctx.Bool("debug")
 		globalopt.Silent = ctx.Bool("silent")
 		if globalopt.Debug || globalopt.Verbose {

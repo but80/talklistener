@@ -5,17 +5,14 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"os/user"
 	"path/filepath"
 	"runtime"
 	"strings"
 
-	"github.com/but80/talklistener/internal/globalopt"
 	"golang.org/x/xerrors"
 )
 
@@ -185,30 +182,11 @@ func Dictate(wavfile, model string) (*Result, error) {
 	}
 	bin = filepath.Join(kitdir, bin)
 
-	f, err := ioutil.TempFile("", "julius-filelist")
-	if err != nil {
-		return nil, xerrors.Errorf("一時ファイルの作成に失敗しました: %w", err)
-	}
-	defer os.Remove(f.Name())
-	if _, err := f.WriteString(wavfile + "\n"); err != nil {
-		f.Close()
-		return nil, xerrors.Errorf("一時ファイルの作成に失敗しました: %w", err)
-	}
-	if err := f.Sync(); err != nil {
-		f.Close()
-		return nil, xerrors.Errorf("一時ファイルの作成に失敗しました: %w", err)
-	}
-	if err := f.Close(); err != nil {
-		return nil, xerrors.Errorf("一時ファイルの作成に失敗しました: %w", err)
-	}
-
-	argv := []string{}
+	argv := []string{bin}
 	argv = append(argv, conf.opts...)
 	argv = append(argv,
 		"-palign",
-		"-module",
 		"-input", "file",
-		"-filelist", f.Name(),
 	)
 
 	// 引数中の相対パスを絶対パスに変換
@@ -218,39 +196,7 @@ func Dictate(wavfile, model string) (*Result, error) {
 			argv[i] = filepath.Join(kitdir, v[2:])
 		}
 	}
+	log.Printf("debug: running julius: %+v", argv)
 
-	// juliusサーバ開始
-	serverErr := make(chan error, 1)
-	go func() {
-		log.Printf("debug: コマンドを開始しています: %s %v", bin, argv)
-		cmd := exec.Command(bin, argv...)
-		if globalopt.Verbose {
-			cmd.Stdout = os.Stderr
-			cmd.Stderr = os.Stderr
-		}
-		serverErr <- cmd.Run()
-	}()
-
-	// クライアント
-	clientErr := make(chan error, 1)
-	result := &Result{}
-	go func() {
-		phones, err := jcontrol()
-		result.Dictation = phones
-		clientErr <- err
-	}()
-
-	// クライアントの終了を待機
-	if err := <-clientErr; err != nil {
-		log.Printf("debug: juliusクライアントがエラー終了しました: %s", err.Error())
-		return nil, err
-	}
-
-	// juliusサーバの終了を待機
-	if err := <-serverErr; err != nil {
-		log.Printf("debug: juliusサーバがエラー終了しました: %s", err.Error())
-		return nil, err
-	}
-
-	return result, nil
+	return run(argv, wavfile)
 }
