@@ -137,15 +137,15 @@ func isNewer(this, that string) bool {
 	return 0 < sThis.Size() && sThis.ModTime().After(sThat.ModTime())
 }
 
-// libjulius のビルド
-func buildJulius() error {
+// libsent のビルド
+func BuildSent() error {
 	mg.SerialDeps(replaceSentParameters)
-	if isNewer("cmodules/julius/libjulius/libjulius.a", "cmodules/julius/libsent/include/sent/speech.h") {
-		fmt.Println("libjulius.a は最新です")
+	if isNewer("cmodules/julius/libsent/libsent.a", "cmodules/julius/libsent/include/sent/speech.h") {
+		fmt.Println("libsent.a は最新です")
 		return nil
 	}
-	fmt.Println("julius をビルド中...")
-	if err := pushDir("cmodules/julius"); err != nil {
+	fmt.Println("libsent をビルド中...")
+	if err := pushDir("cmodules/julius/libsent"); err != nil {
 		return err
 	}
 	defer popDir()
@@ -159,8 +159,30 @@ func buildJulius() error {
 	return nil
 }
 
-func buildWorld() error {
-	mg.SerialDeps(buildJulius)
+// libjulius のビルド
+func BuildJulius() error {
+	mg.SerialDeps(BuildSent)
+	if isNewer("cmodules/julius/libjulius/libjulius.a", "cmodules/julius/libsent/include/sent/speech.h") {
+		fmt.Println("libjulius.a は最新です")
+		return nil
+	}
+	fmt.Println("libjulius をビルド中...")
+	if err := pushDir("cmodules/julius/libjulius"); err != nil {
+		return err
+	}
+	defer popDir()
+	_ = sh.RunV("make", "distclean")
+	if err := sh.RunV("./configure"); err != nil {
+		return err
+	}
+	if err := sh.RunV("make"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func BuildWorld() error {
+	mg.SerialDeps(BuildJulius)
 	if isNewer("cmodules/world/build/libworld.a", "cmodules/world/libsent/include/sent/speech.h") {
 		fmt.Println("libworld.a は最新です")
 		return nil
@@ -176,7 +198,7 @@ func buildWorld() error {
 
 // Cモジュールのビルド
 func Cmodules() error {
-	mg.SerialDeps(buildWorld)
+	mg.SerialDeps(BuildWorld)
 	return nil
 }
 
@@ -203,11 +225,11 @@ func Assets() error {
 	return nil
 }
 
-// バイナリのビルド
-func Build() error {
+// CLI版バイナリのビルド
+func BuildCli() error {
 	mg.SerialDeps(Cmodules)
-	fmt.Println("talklistener をビルド中...")
-	if err := sh.RunV("go", "build", "."); err != nil {
+	fmt.Println("talklistener-cli をビルド中...")
+	if err := sh.RunV("go", "build", "./cmd/talklistener-cli"); err != nil {
 		return err
 	}
 	return nil

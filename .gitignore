@@ -2,6 +2,7 @@
 /output/
 /test/
 /talklistener
+/talklistener-cli
 /vendor/**/*.wav
 /examples/**/*.aiff
 /examples/**/*.flac

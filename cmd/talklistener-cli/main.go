@@ -10,9 +10,6 @@ import (
 	"github.com/but80/talklistener/internal/vsqx"
 	"github.com/comail/colog"
 	"github.com/urfave/cli"
-
-	// Go >= 1.10 required
-	_ "github.com/theckman/goconstraint/go1.10/gte"
 )
 
 var version = "unknown"
