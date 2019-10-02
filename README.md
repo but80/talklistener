@@ -134,6 +134,32 @@ GLOBAL OPTIONS:
 - 入力音声ファイルを更新して再実行した際、キャッシュに残っている古い音声ファイルが参照されてしまう場合があります（入力音声ファイルのタイムスタンプが更新されていないと発生します）。このような場合は `-r` オプションを付けるか、または事前にキャッシュディレクトリ `音声ファイル.tlo/` を削除してから再実行してください。
 - キャッシュディレクトリ `音声ファイル.tlo/` は、同一音声ファイルに対する再実行時の処理を軽減するために作成されています。出力VSQXファイルの内容を確認して問題がなければ、このキャッシュディレクトリは削除しても構いません。
 
+## ビルド手順
+
+### Windows
+
+MSYS2環境にて
+
+```bash
+pacman -S gcc yasm pkg-config diffutils make git wget vim
+pacman -S mingw-w64-x86_64-go
+pacman -S mingw-w64-x86_64-portaudio
+pacman -S libsox
+mkdir ~/go
+export GOPATH=$HOME/go
+export GOROOT=/mingw64/lib/go
+export LDFLAGS="-L/mingw64/lib"
+export CFLAGS="-I/mingw64/include"
+cd cmodules/julius/libsent
+./configure --with-mictype=portaudio && make
+cd ../libjulius
+./configure && make
+cd ../../world
+make
+cd ../..
+go build ./cmd/talklistener-cli
+```
+
 ## ライセンス
 
 - 本ソフトウェアは三条項BSDライセンスです。[LICENSE](./LICENSE) をお読みください。

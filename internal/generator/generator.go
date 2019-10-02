@@ -13,7 +13,7 @@ import (
 
 	"github.com/but80/talklistener/internal/julius"
 	"github.com/but80/talklistener/internal/vsqx"
-	"github.com/krig/go-sox"
+	"github.com/mkb218/gosndfile/sndfile"
 	"golang.org/x/xerrors"
 )
 
@@ -171,31 +171,47 @@ func (gen *generator) dump() {
 func convertAudioFile(in, out string) error {
 	log.Print("info: 音声ファイルのフォーマットを変換中...")
 
-	fin := sox.OpenRead(in)
-	if fin == nil {
-		return xerrors.Errorf("Failed to open input file: %s", in)
+	var inInfo sndfile.Info
+	fin, err := sndfile.Open(in, sndfile.Read, &inInfo)
+	if err != nil {
+		return xerrors.Errorf("Failed to open input file: %w", err)
 	}
-	defer fin.Release()
+	defer fin.Close()
+	log.Print("debug: info = %#v", &inInfo)
 
-	signalInfo := sox.NewSignalInfo(16000, 1, 16, 0, nil)
-	encodingInfo := sox.NewEncodingInfo(sox.ENCODING_SIGN2, 16, 0, false)
-	fout := sox.OpenWrite(out, signalInfo, encodingInfo, nil)
-	if fout == nil {
-		return xerrors.Errorf("Failed to open output file: %s", out)
+	outInfo := sndfile.Info{
+		Frames:     inInfo.Frames,
+		Samplerate: inInfo.Samplerate,
+		Channels:   1,
+		Format:     sndfile.SF_FORMAT_WAV | sndfile.SF_FORMAT_PCM_16,
+		Sections:   inInfo.Sections,
+		Seekable:   inInfo.Seekable,
 	}
-	defer fout.Release()
+	fout, err := sndfile.Open(out, sndfile.Write, &outInfo)
+	if err != nil {
+		return xerrors.Errorf("Failed to open output file: %w", err)
+	}
+	defer fout.Close()
 
 	const readSize = 2048
-	samples := make([]sox.Sample, readSize)
+	samples := make([]float64, readSize)
 	for {
-		m := fin.Read(samples, readSize)
-		if m <= 0 {
+		n, err := fin.ReadFrames(samples)
+		if err != nil {
+			return err
+		}
+		if n <= 0 {
 			break
 		}
-		if fout.Write(samples, uint(m)) != m {
-			return xerrors.Errorf("Failed to write file: %s", out)
+		m, err := fout.WriteFrames(samples[:n])
+		if err != nil {
+			return err
+		}
+		if n != m {
+			return xerrors.Errorf("Failed to write file (%d != %d): %s", n, m, out)
 		}
 	}
+	fout.WriteSync()
 	return nil
 }
 
