@@ -142,7 +142,7 @@ GLOBAL OPTIONS:
 go run mage.go buildCli
 ```
 
-### Windows
+### Windows (WIP)
 
 MSYS2環境にて
 
