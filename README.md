@@ -136,6 +136,12 @@ GLOBAL OPTIONS:
 
 ## ビルド手順
 
+### macOS / Linux
+
+```bash
+go run mage.go buildCli
+```
+
 ### Windows
 
 MSYS2環境にて
