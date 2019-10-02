@@ -150,7 +150,8 @@ MSYS2環境にて
 pacman -S gcc yasm pkg-config diffutils make git wget vim
 pacman -S mingw-w64-x86_64-go
 pacman -S mingw-w64-x86_64-portaudio
-pacman -S libsox
+pacman -S mingw-w64-x86_64-zlib
+pacman -S mingw-w64-x86_64-libsndfile
 mkdir ~/go
 export GOPATH=$HOME/go
 export GOROOT=/mingw64/lib/go
@@ -163,7 +164,7 @@ cd ../libjulius
 cd ../../world
 make
 cd ../..
-go build ./cmd/talklistener-cli
+go build -ldflags "$LDFLAGS" -gcflags "$CFLAGS" ./cmd/talklistener-cli
 ```
 
 ## ライセンス
