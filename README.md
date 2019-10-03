@@ -8,15 +8,16 @@
 
 - 以下のいずれかのOS
   - macOS Sierra 以降
-  - Ubuntu 18.04 on WSL
+  - Linux
+  - Windows 10
 
 ## インストール手順
 
 ### 手作業でのインストール
 
-1. [リリースページ](https://github.com/but80/talklistener/releases) から `talklistener_X.X.X_darwin_amd64.tar.gz` をダウンロード
+1. [リリースページ](https://github.com/but80/talklistener/releases) から `talklistener_*.tar.gz` をダウンロード
 2. アーカイブを展開
-3. 展開されたディレクトリに含まれる `talklistener` を任意の場所に移動
+3. 展開されたディレクトリに含まれる `talklistener-cli` を任意の場所に移動
 
 ### macOS + Homebrew でのインストール
 
@@ -27,16 +28,7 @@ brew install but80/tap/talklistener
 
 ### Go 1.12 でのインストール（開発者向け）
 
-```bash
-go run mage.go install
-
-# または
-
-go run mage.go build
-sudo mv ./talklistener /usr/local/bin/
-```
-
-Julius, WORLD が依存しているライブラリ および libsox が必要になりますので、不足している場合は事前にインストールしてください。
+後述のビルド手順に従ってください。
 
 ## 使用方法
 
@@ -138,34 +130,50 @@ GLOBAL OPTIONS:
 
 ### macOS / Linux
 
+以下のものが必要になりますので、不足している場合は事前にインストールしてください。
+
+- Go 1.12
+- libsndfile
+
 ```bash
+git clone https://github.com/but80/talklistener.git
+cd talklistener
 go run mage.go buildCli
 ```
 
-### Windows (WIP)
+### Windows
 
-MSYS2環境にて
-
-```bash
-pacman -S gcc yasm pkg-config diffutils make git wget vim
-pacman -S mingw-w64-x86_64-go
-pacman -S mingw-w64-x86_64-portaudio
-pacman -S mingw-w64-x86_64-zlib
-pacman -S mingw-w64-x86_64-libsndfile
-mkdir ~/go
-export GOPATH=$HOME/go
-export GOROOT=/mingw64/lib/go
-export LDFLAGS="-L/mingw64/lib"
-export CFLAGS="-I/mingw64/include"
-cd cmodules/julius/libsent
-./configure --with-mictype=portaudio && make
-cd ../libjulius
-./configure && make
-cd ../../world
-make
-cd ../..
-go build -ldflags "$LDFLAGS" -gcflags "$CFLAGS" ./cmd/talklistener-cli
-```
+1. MSYS2 + MinGW64 環境をセットアップ
+2. 環境変数 `MSYSTEM=MINGW64` で MSYS2 起動
+3. ```bash
+   # Install packages
+   pacman -S git make mingw-w64-x86_64-{autoconf,gcc,pkg-config,go,portaudio,libsndfile}
+   
+   # Setup golang
+   mkdir ~/go
+   export GOPATH=$HOME/go
+   export GOROOT=/mingw64/lib/go
+   
+   # Build our project
+   git clone https://github.com/but80/talklistener.git
+   cd talklistener
+   (
+     cd cmodules/julius/libsent &&
+     ./configure --with-mictype=portaudio &&
+     make && make install
+   )
+   (
+     cd cmodules/julius/libjulius &&
+     ./configure && make && make install
+   )
+   ( cd cmodules/world && make )
+   go build ./cmd/talklistener-cli
+   
+   # Make distribution package
+   mkdir dist
+   cp talklistener-cli.exe dist/
+   cp /mingw64/bin/{libgomp-1,libportaudio-2,libstdc++-6,zlib1}.dll dist/
+   ```
 
 ## ライセンス
 
@@ -177,12 +185,9 @@ go build -ldflags "$LDFLAGS" -gcflags "$CFLAGS" ./cmd/talklistener-cli
 ## TODO
 
 - やりたい
-  - ディクテーションキットの自動ダウンロード
-  - アプリケーションリンクへのDnDで変換
   - 無音部分のf0補間方法を改良
 - やるかも
   - 抑揚を強調
   - 音量からDYNを生成
   - 非周期成分の比率からBREを生成
-  - Windows対応
   - GUI

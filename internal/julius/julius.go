@@ -3,8 +3,9 @@ package julius
 /*
 #cgo darwin LDFLAGS: -L../../cmodules/julius/libjulius -ljulius -ldl -lpthread -L../../cmodules/julius/libsent -lsent -Wl,-framework -Wl,CoreServices -Wl,-framework -Wl,CoreAudio -Wl,-framework -Wl,AudioUnit -Wl,-framework -Wl,AudioToolbox -lz -lsndfile -liconv -lm
 #cgo linux LDFLAGS: -L../../cmodules/julius/libjulius -ljulius -ldl -lpthread -L../../cmodules/julius/libsent -lsent -lasound -lsndfile -lz -lm -fopenmp
-#cgo windows LDFLAGS: -L../../cmodules/julius/libjulius -ljulius -ldl -lpthread -L../../cmodules/julius/libsent -lsent -lasound -lsndfile -lz -lm -fopenmp
-#cgo CFLAGS: -I../../cmodules/julius/libjulius/include -I../../cmodules/julius/libsent/include
+#cgo windows LDFLAGS: -ljulius -ldl -lpthread -lsent -lportaudio -lsndfile -lz -lm -lws2_32 -fopenmp
+#cgo darwin CFLAGS: -I../../cmodules/julius/libjulius/include -I../../cmodules/julius/libsent/include
+#cgo linux CFLAGS: -I../../cmodules/julius/libjulius/include -I../../cmodules/julius/libsent/include
 #include "julius/juliuslib.h"
 
 void onPass1Frame(Recog *recog, void *data);
