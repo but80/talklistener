@@ -15,8 +15,8 @@ import (
 var version = "unknown"
 
 const description = `
-   - <音声ファイル> は .wav .flac .mp3 等のフォーマットに対応しています。
-     詳細はSoXのプロジェクトページ http://sox.sourceforge.net/ をお読みください。
+   - <音声ファイル> は .wav .aiff .flac 等のフォーマットに対応しています。
+     詳細はlibsndfileのプロジェクトページ http://www.mega-nerd.com/libsndfile/ をお読みください。
    - イントネーションの抽出に「音声分析変換合成システム WORLD」
      https://github.com/mmorise/World を使用しています。
    - 発音タイミングの抽出に「大語彙連続音声認識エンジン Julius」
