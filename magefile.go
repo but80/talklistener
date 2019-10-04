@@ -150,7 +150,7 @@ func BuildSent() error {
 	}
 	defer popDir()
 	_ = sh.RunV("make", "distclean")
-	if err := sh.RunV("./configure"); err != nil {
+	if err := sh.RunV("./configure", "--with-mictype=oss"); err != nil {
 		return err
 	}
 	if err := sh.RunV("make"); err != nil {
