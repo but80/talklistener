@@ -175,15 +175,22 @@ go run mage.go buildCli
    # Make distribution package
    mkdir dist
    cp talklistener-cli.exe dist/
-   cp /mingw64/bin/{libgomp-1,libportaudio-2,libstdc++-6,zlib1}.dll dist/
+   cp /mingw64/bin/{libstdc++-6,libgomp-1,zlib1,libportaudio-2}.dll dist/
+   cp README* LICENSE* CREDITS* dist/
    ```
 
 ## ライセンス
 
-- 本ソフトウェアは三条項BSDライセンスです。[LICENSE](./LICENSE) をお読みください。
-- イントネーションの抽出に [音声分析変換合成システム WORLD](https://github.com/mmorise/World) を使用しています。WORLD の著作権およびライセンスについては [LICENSE-world.txt](./LICENSE-world.txt) をお読みください。
-- 発音タイミングの抽出に [大語彙連続音声認識エンジン Julius](https://github.com/julius-speech/julius) および [segmentation-kit](https://github.com/julius-speech/segmentation-kit) に含まれる音響モデルを使用しています。Julius の著作権およびライセンスについては [LICENSE-julius.txt](./LICENSE-julius.txt) をお読みください。
-- 本ソフトウェアを利用して制作したソフトウェアのソースコード および バイナリに付属するドキュメントには、本ソフトウェアのライセンス表記に加え、上記 WORLD, Julius の各ライセンス表記を併せて含める必要があります。
+- 本ソフトウェアのライセンスは [3-Clause BSD License](./LICENSE) です。ただし、音声認識に関する機能の再利用については Julius の条文をご確認ください（詳細は次項）。
+- 発話内容と発音タイミングの抽出に [大語彙連続音声認識エンジン Julius](https://github.com/julius-speech/julius) および [segmentation-kit](https://github.com/julius-speech/segmentation-kit) に含まれる音響モデルを使用しています。Julius の著作権およびライセンスについては [CREDITS-julius](./CREDITS-julius) をお読みください。
+- イントネーションの抽出に [音声分析変換合成システム WORLD](https://github.com/mmorise/World) を使用しています。WORLD の著作権およびライセンスについては [CREDITS-world](./CREDITS-world) をお読みください。
+- Windows版の配布アーカイブに含まれる `libstdc++-6.dll`, `libgomp-1.dll` は [GCCランタイムライブラリ例外](./CREDITS-gcc-runtime) のもとに添付されています。
+- GUI機能に [Chromium](http://dev.chromium.org/) を利用しています。Chromium および Chromium が利用する各ソフトウェアのライセンスについては [こちら](https://web.archive.org/web/20081026150300/http://code.google.com/chromium/terms.html) をお読みください。
+- 以下の依存ソフトウェアはビルドタスクにのみ使用しており、配布バイナリには含まれません。
+  - `golang.org/x/tools` (3-Clause BSD License)
+  - `github.com/magefile/mage` (Apache License)
+- その他の依存ソフトウェアに関するライセンスの詳細は [CREDITS](./CREDITS) をお読みください。
+- 本ソフトウェアを利用して制作したソフトウェアのソースコード および バイナリに付属するドキュメントには、本ソフトウェアのライセンス表記に加え、上記の各ライセンス表記を併せて含める必要があります。
 
 ## TODO
 
