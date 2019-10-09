@@ -183,22 +183,35 @@ func convertAudioFile(in, out string) error {
 	defer fin.Close()
 	log.Printf("debug: info = %#v", &inInfo)
 
-	source := make([]float64, inInfo.Frames)
-	n0, err := fin.ReadFrames(source)
+	n0 := int(inInfo.Frames)
+	ch := int(inInfo.Channels)
+	source := make([]float64, n0*ch)
+	n, err := fin.ReadFrames(source)
 	if err != nil {
 		return err
 	}
-	if int(n0) != len(source) {
-		return xerrors.Errorf("Failed to read file (%d != %d): %s", n0, len(source), in)
+	if int(n) != n0 {
+		return xerrors.Errorf("Failed to read file (%d != %d): %s", n, n0, in)
+	}
+
+	if 1 < ch {
+		source0 := source
+		source = make([]float64, n0)
+		for i := 0; i < n0; i++ {
+			for j := 0; j < ch; j++ {
+				source[i] += source0[i*ch+j]
+			}
+			source[i] /= float64(ch)
+		}
 	}
 
 	sampleRate := int(inInfo.Samplerate)
-	n1 := int(n0)
+	n1 := n0
 	dest := source
 	if 16000 < sampleRate {
 		sampleRate = 16000
 		n1 = int(math.Round(float64(n0) * float64(sampleRate) / float64(inInfo.Samplerate)))
-		dest := make([]float64, n1)
+		dest = make([]float64, n1)
 		for i1 := 0; i1 < n1; i1++ {
 			i0 := float64(i1) * float64(n0) / float64(n1)
 			i0i := int(i0)
