@@ -168,6 +168,10 @@ func (gen *generator) dump() {
 	fmt.Println(string(gen.vsqx.Bytes()))
 }
 
+func lerp(a, b, r float64) float64 {
+	return a*(1.0-r) + b*r
+}
+
 func convertAudioFile(in, out string) error {
 	log.Print("info: 音声ファイルのフォーマットを変換中...")
 
@@ -177,11 +181,35 @@ func convertAudioFile(in, out string) error {
 		return xerrors.Errorf("Failed to open input file: %w", err)
 	}
 	defer fin.Close()
-	log.Print("debug: info = %#v", &inInfo)
+	log.Printf("debug: info = %#v", &inInfo)
+
+	source := make([]float64, inInfo.Frames)
+	n0, err := fin.ReadFrames(source)
+	if err != nil {
+		return err
+	}
+	if int(n0) != len(source) {
+		return xerrors.Errorf("Failed to read file (%d != %d): %s", n0, len(source), in)
+	}
+
+	sampleRate := int(inInfo.Samplerate)
+	n1 := int(n0)
+	dest := source
+	if 16000 < sampleRate {
+		sampleRate = 16000
+		n1 = int(math.Round(float64(n0) * float64(sampleRate) / float64(inInfo.Samplerate)))
+		dest := make([]float64, n1)
+		for i1 := 0; i1 < n1; i1++ {
+			i0 := float64(i1) * float64(n0) / float64(n1)
+			i0i := int(i0)
+			i0f := i0 - float64(i0i)
+			dest[i1] = lerp(source[i0i], source[i0i+1], i0f)
+		}
+	}
 
 	outInfo := sndfile.Info{
-		Frames:     inInfo.Frames,
-		Samplerate: inInfo.Samplerate,
+		Frames:     int64(n1),
+		Samplerate: int32(sampleRate),
 		Channels:   1,
 		Format:     sndfile.SF_FORMAT_WAV | sndfile.SF_FORMAT_PCM_16,
 		Sections:   inInfo.Sections,
@@ -193,23 +221,12 @@ func convertAudioFile(in, out string) error {
 	}
 	defer fout.Close()
 
-	const readSize = 2048
-	samples := make([]float64, readSize)
-	for {
-		n, err := fin.ReadFrames(samples)
-		if err != nil {
-			return err
-		}
-		if n <= 0 {
-			break
-		}
-		m, err := fout.WriteFrames(samples[:n])
-		if err != nil {
-			return err
-		}
-		if n != m {
-			return xerrors.Errorf("Failed to write file (%d != %d): %s", n, m, out)
-		}
+	m, err := fout.WriteFrames(dest)
+	if err != nil {
+		return err
+	}
+	if int(m) != len(dest) {
+		return xerrors.Errorf("Failed to write file (%d != %d): %s", m, len(dest), out)
 	}
 	fout.WriteSync()
 	return nil

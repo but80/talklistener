@@ -150,7 +150,7 @@ go run mage.go buildCli
 2. 環境変数 `MSYSTEM=MINGW64` で MSYS2 起動
 3. ```bash
    # Install packages
-   pacman -S git make mingw-w64-x86_64-{autoconf,gcc,pkg-config,go,portaudio,libsndfile}
+   pacman -S git make mingw-w64-x86_64-{toolchain,go,libsndfile,portaudio}
    
    # Setup golang
    mkdir ~/go
